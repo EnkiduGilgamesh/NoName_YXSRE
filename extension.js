@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 26/08/2022 06:35:3
+ * Last Modified: 26/08/2022 08:39:32
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -24,11 +24,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
             //平凡武将
             lib.rank.rarity.junk.addArray(['yxsre_yuefei','yxsre_goujian','yxsre_direnjie','yxsre_lishimin','yxsre_zuti','yxsre_zhaoyong','xy_linzhen','xy_yuanshangqin']);
             //精品武将
-            lib.rank.rarity.rare.addArray(["yxsre_yuji","yxsre_diaochan","yxsre_zhangsanfeng"]);
+            lib.rank.rarity.rare.addArray(["yxsre_yuji","yxsre_diaochan","yxsre_zhangsanfeng","xy_huangyang"]);
             //史诗武将
             lib.rank.rarity.epic.addArray(["yxsre_lvzhi","yxsre_xiangyu"]);
             //传说武将
-            lib.rank.rarity.legend.addArray(["yxsre_yingzheng","yxsre_zhuyuanzhang"]);
+            lib.rank.rarity.legend.addArray(["yxsre_yingzheng","yxsre_zhuyuanzhang","yxsre_huamulan"]);
 
             //势力
             /*var style_yxsre_han=document.createElement('style');
@@ -86,7 +86,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 
                                 yxsre_shijie:["yxsre_mingchenghuanghou","yxsre_aijiyanhou"],
                                 xy_jinxiandai:["xy_denglijun"],
-                                xy_jinzhao:["xy_linzhen","xy_yuanshangqin"],
+                                xy_jinzhao:["xy_linzhen","xy_yuanshangqin","xy_huangyang"],
                                 yxsre_undo:["yxsre_zhangsanfeng"],
                             },
                         },
@@ -112,9 +112,72 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             //xinyu
                             xy_denglijun:['female','xin',3,['xy_miaoyin','xy_youyang'],[]],
                             xy_linzhen:['male','xin',3,['xy_zhenhui'],[]],
-                            xy_yuanshangqin:['male','xin',4,['xy_biqin'],[]]
+                            xy_yuanshangqin:['male','xin',4,['xy_biqin'],[]],
+                            xy_huangyang:['male','xin',3,['xy_danmei','xy_qiyuan'],[]],
                         },
                         skill:{
+                            xy_qiyuan:{
+                                trigger:{
+                                    player:"phaseBegin",
+                                },
+                                frequent:true,
+                                content:function(){
+                                    'step 0'
+                                    player.judge(function(card){
+                                        if(get.suit(card)!='heart') return 1;
+                                        else return 2;
+                                    })
+                                    'step 1'
+                                    if(result.bool){
+                                        event.card=result.card;
+                                        if(get.suit(result.card)=='heart'){
+                                            player.chooseDrawRecover(2,true,function(event,player){
+                                                if(player.hp==1&&player.isDamaged()) return 'recover_hp';
+                                                return 'draw_card';
+                                            });
+                                            event.finish();
+                                        }
+                                        else event.goto(2)
+                                    }
+                                    'step 2'
+                                    player.chooseTarget(true,'令一名角色获得'+get.translation(event.card),true).set('ai',function(target){
+                                        return get.attitude(player,target);
+                                    });
+                                    'step 3'
+                                    if(result.bool){
+                                        result.targets[0].gain(event.card,'gain2');
+                                    }
+                                    else event.finish();
+                                },
+                            },
+
+                            xy_danmei:{
+                                trigger:{
+                                    player:["loseAfter","gainAfter"],
+                                    global:["equipAfter","addJudgeAfter","gainAfter","loseAsyncAfter","addToExpansionAfter"],
+                                },
+                                filter:function(event,player){
+                                    if(player==_status.currentPhase) return false;
+                                    var evt=event.getl(player);
+                                    if(!evt||!evt.cards2||!evt.cards2.length) return false;
+                                    return true;
+                                },
+                                
+                                content:function(){
+                                    'step 0'
+                                    event.numx=trigger.cards.length;
+                                    player.chooseTarget(true,'选择一名其他角色摸'+get.cnNumber(event.numx)+'张牌',function(card,player,target){
+                                        return target!=player;
+                                    }).set('ai',function(target){
+                                        return get.effect(target,{name:'wuzhong'},player,player)/2*event.numx;
+                                    })
+                                    'step 1'
+                                    if(result.bool){
+                                        result.targets[0].draw(event.numx);
+                                    }
+                                },
+                            },
+
                             yxsre_pushuo:{
                                 priority:2,
                                 trigger:{
@@ -150,7 +213,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                                 prompt:'摸一张牌，然后将性别转变为男性',
                                 filter:function(event,player){
-                                    return player.storage.yxsre_pushuo;
+                                    return player.storage.yxsre_pushuo&&_status.event.skil!='yxsre_pushuo_toFemale';
                                 },
                                 check:function(){
                                     return true;
@@ -170,7 +233,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     player:["phaseBefore","phaseAfter"],
                                 },
                                 filter:function(event,player){
-                                    return player.countCards('he',{type:'equip'})&&!player.storage.yxsre_pushuo;
+                                    return player.countCards('he',{type:'equip'})&&!player.storage.yxsre_pushuo&&_status.event.skil!='yxsre_pushuo_toMale';
                                 },
                                 check:function(event,player){
                                     if(player.hasSkill('xiaoji')) return true;
@@ -221,6 +284,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     player.removeAdditionalSkill('yxsre_mili');
                                     event.sex=player.storage.yxsre_mili?'female':'male';
                                     player.storage.maxNum=player.hasSex(event.sex)?2:1;
+                                    player.storage.yxsre_mili=Math.round(Math.random());
                                     'step 1'
                                     var list;
                                     if(_status.characterlist){
@@ -357,8 +421,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             info.audioname2.old_yuanshu='weidi';
                                         }
                                     },map.skills);
-                                    'step 3'
-                                    player.storage.yxsre_mili=Math.round(Math.random());
                                 },
                             },
 
@@ -2318,6 +2380,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_denglijun:'邓丽君',
                             xy_linzhen:'林臻',
                             xy_yuanshangqin:'袁上钦',
+                            xy_huangyang:'黄阳',
 
                             //Skill
                             yxsre_pushuo:'扑朔',
@@ -2387,6 +2450,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 			                yxsre_zhunwu_info:'出牌阶段开始时，你可以展示所有手牌，若其中的牌的类型数不小于：1，你可以选择一名男性角色，你与其各摸一张牌；2，你获得“离间”直到此阶段结束；3，你获得“离魂”直到此阶段结束。',
 
                             //xinyu
+                            xy_qiyuan:'祈愿',
+                            xy_qiyuan_info:'准备阶段，你可以判定，若结果：为红桃，你可以回复1点体力或摸两张牌；不为红桃，你选择一名角色获得判定牌。',
+                            xy_danmei:'耽美',
+                            xy_danmei_info:'你的回合外，当你失去牌后，你可以另一名其他角色摸等量的牌。',
                             xy_biqin:'比钦',
                             xy_biqin_info:'锁定技。当你使用【杀】或成为【杀】的目标后，你判定，若结果为：黑色，此【杀】对所有目标无效；红色，你获得判定牌。',
                             xy_zhenhui:'振麾',
@@ -2395,6 +2462,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_miaoyin_info:'准备阶段，你可以判定。若结果点数为1-7，你可以获得此判定牌，然后重复此流程。',
                             xy_youyang:'悠扬',
                             xy_youyang_info:'你可以将某个点数的一张牌按如下对应关系当作对应牌使用或打出：1点--【杀】，2点--【闪】，3点--【桃】，4点--【酒】，5点--【五谷丰登】，6点--【无中生有】，7点--【无懈可击】',
+                            xy_youyang_append:'<span style="font-family: yuanli">来吧，羽依里。用你的手，让我变成那只真正的鬼吧！</span>',
                         },
                         characterIntro:{
                             yxsre_zhaoyong:'赵武灵王，战国中后期赵国君主，嬴姓，赵氏，名雍。赵武灵王在位时，推行的“胡服骑射”政策，赵国因而得以强盛，灭中山国，败林胡、楼烦二族，辟云中、雁门、代三郡，并修筑了“赵长城”。',
