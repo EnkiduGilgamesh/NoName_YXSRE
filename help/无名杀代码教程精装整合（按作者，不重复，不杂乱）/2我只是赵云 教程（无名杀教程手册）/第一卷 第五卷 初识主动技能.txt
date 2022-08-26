@@ -1,0 +1,96 @@
+第一卷 第五卷 初识主动技能
+　　主动技能
+
+　　在出牌阶段使用：enable:'phaseUse'；在任意用牌时机使用：enable:'chooseToUse'；在需打出牌时使用：enable:'chooseToRespond'
+
+　　举例：苦肉
+
+　　enable:'phaseUse',
+
+　　content:function(){
+
+　　"step 0"
+
+　　player.loseHp(1);
+
+　　"step 1"
+
+　　player.draw(2);
+
+　　}
+
+　　举例：制衡
+
+　　enable:'phaseUse',
+
+　　usable:1,
+
+　　filterCard:true,
+
+　　position:'he',
+
+　　selectCard:[1,Infinity],
+
+　　prompt:'弃置任意张牌并摸等量的牌',
+
+　　content:function(){
+
+　　player.draw(cards.length);
+
+　　},
+
+　　usable：出牌阶段可发动的次数
+
+　　filterCard：什么样的牌可被选，true为没限制
+
+　　position：要选择卡牌的区域，h为手牌；he为手牌和装备牌；hej为手牌、装备牌和判定牌
+
+　　selectCard：需选择卡牌数，[1,Infinity]代表最少为1,最大无上限，若定义了filterCard，则默认为[1,1]
+
+　　promot：选择技能后的提示框
+
+　　举例：结姻
+
+　　enable:'phaseUse',
+
+　　filterCard:true,
+
+　　selectCard:2,
+
+　　filterTarget:function(card,player,target){
+
+　　if(target.sex!='male') return false;
+
+　　if(target.hp>=target.maxHp) return false;
+
+　　if(target==player) return false;
+
+　　return true;
+
+　　},
+
+　　content:function(){
+
+　　player.recover();
+
+　　target.recover();
+
+　　}
+
+　　selectCard：2代表最少选两张，最多选两张
+
+　　filterTarget：选择目标需满足的条件
+
+　　selectTarget：类似selectCard，由于定义了filterTarget，默认为[1,1]，所以已省略
+
+　　//enable:'phaseUse',
+
+　　上面的是主动使用
+
+　　//usable:1,
+
+　　上面是使用次数，如果想任意使用，删除代码即可。
+
+　　注：//这个符号是解释说明用的，如果复制了会导致后面的代码无法使用。
+
+　　编写阶段即将开始。
