@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 26/08/2022 08:39:32
+ * Last Modified: 27/08/2022 08:22:22
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -22,13 +22,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
         content:function(config,pack){
             //lib.init.css(lib.assetURL + 'extension/英雄杀RE', 'extension');
             //平凡武将
-            lib.rank.rarity.junk.addArray(['yxsre_yuefei','yxsre_goujian','yxsre_direnjie','yxsre_lishimin','yxsre_zuti','yxsre_zhaoyong','xy_linzhen','xy_yuanshangqin']);
+            lib.rank.rarity.junk.addArray(['yxsre_yuefei','yxsre_goujian','yxsre_direnjie','yxsre_lishimin','yxsre_zuti','yxsre_zhaoyong','xy_linzhen','xy_yaosongwei']);
             //精品武将
             lib.rank.rarity.rare.addArray(["yxsre_yuji","yxsre_diaochan","yxsre_zhangsanfeng","xy_huangyang"]);
             //史诗武将
-            lib.rank.rarity.epic.addArray(["yxsre_lvzhi","yxsre_xiangyu"]);
+            lib.rank.rarity.epic.addArray(["yxsre_lvzhi","yxsre_xiangyu",'yxsre_luban']);
             //传说武将
-            lib.rank.rarity.legend.addArray(["yxsre_yingzheng","yxsre_zhuyuanzhang","yxsre_huamulan"]);
+            lib.rank.rarity.legend.addArray(["yxsre_yingzheng","yxsre_zhuyuanzhang","yxsre_huamulan","yxsre_sunwu"]);
 
             //势力
             /*var style_yxsre_han=document.createElement('style');
@@ -77,27 +77,29 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         connect:true,
                         characterSort:{
                             yxsre: {
-                                yxsre_chunqiu:["yxsre_yingzheng","yxsre_goujian","yxsre_zhaoyong","yxsre_baiqi"],
+                                yxsre_chunqiu:["yxsre_yingzheng","yxsre_goujian","yxsre_zhaoyong","yxsre_baiqi",'yxsre_sunwu','yxsre_luban'],
                                 yxsre_dahan:["yxsre_lvzhi","yxsre_xiangyu","yxsre_yuji","yxsre_diaochan"],
                                 yxsre_nanbei:["yxsre_zuti","yxsre_huamulan"],
                                 yxsre_datang:["yxsre_direnjie","yxsre_lishimin"],
                                 yxsre_liangsong:["yxsre_yuefei","yxsre_lishishi"],
-                                yxsre_mingqing:["yxsre_zhuyuanzhang"],
+                                yxsre_mingqing:["yxsre_zhuyuanzhang","yxsre_zhangsanfeng"],
 
                                 yxsre_shijie:["yxsre_mingchenghuanghou","yxsre_aijiyanhou"],
                                 xy_jinxiandai:["xy_denglijun"],
-                                xy_jinzhao:["xy_linzhen","xy_yuanshangqin","xy_huangyang"],
-                                yxsre_undo:["yxsre_zhangsanfeng"],
+                                xy_jinzhao:["xy_linzhen","xy_yaosongwei","xy_huangyang"],
+                                yxsre_undo:[],
                             },
                         },
                         character:{
+                            yxsre_luban:['male','shen',3,['yxsre_guifu','yxsre_shengong'],[]],
+                            yxsre_sunwu:['male','shen',3,['yxsre_bingsheng','yxsre_taolue'],[]],
                             yxsre_huamulan:['unknown','shen',3,['yxsre_mili','yxsre_pushuo'],[]],
                             yxsre_lishishi:['female','song',3,['yxsre_manwu','yxsre_hongzhuang'],[]],
                             yxsre_baiqi:['male','daqin',4,['yxsre_rentu'],[]],
                             yxsre_zhaoyong:['male','zhou',4,['yxsre_hufu','yxsre_hanbei'],[]],
                             yxsre_zhuyuanzhang:['male','shen',4,['yxsre_qiangyun'],[]],
                             yxsre_zuti:['male','qun',4,['yxsre_qiwu','yxsre_zhitui'],[]],
-                            yxsre_lishimin:['male','tang',4,['yxsre_kongju'],[]],
+                            yxsre_lishimin:['male','tang',4,['yxsre_kongju','yxsre_zunzi'],[]],
                             yxsre_direnjie:['male','tang',3,['yxsre_shentan','kanpo'],[]],	
                             yxsre_goujian:['male','zhou',3,['keji','yxsre_tuqiang'],[]],
                             yxsre_zhangsanfeng:['male','shen',3,['yxsre_wudang','yxsre_taiji'],[]],
@@ -112,10 +114,165 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             //xinyu
                             xy_denglijun:['female','xin',3,['xy_miaoyin','xy_youyang'],[]],
                             xy_linzhen:['male','xin',3,['xy_zhenhui'],[]],
-                            xy_yuanshangqin:['male','xin',4,['xy_biqin'],[]],
+                            xy_yaosongwei:['male','xin',4,['xy_biqin'],[]],
                             xy_huangyang:['male','xin',3,['xy_danmei','xy_qiyuan'],[]],
                         },
                         skill:{
+                            yxsre_guifu:{
+                                enable:'phaseUse',
+                                usable:1,
+                                filterTarget:function(card,player,target){
+                                    return player!=target&&target.countCards('e')>0;
+                                },
+                                content:function(){
+                                    'step 0'
+                                    player.discardPlayerCard(target,'e',true);
+                                    'step 1'
+                                    game.asyncDraw([player,target]);
+                                },
+                                ai:{
+                                    order:8,
+                                    threaten:1.5,
+                                    result:{
+                                        target:-1,
+                                        player:0.5
+                                    }
+                                }
+                            },
+
+                            yxsre_shengong:{
+                                enable:'phaseUse',
+                                filterTarget:function(card,player,target){
+                                    return target.hasCard(function(card){
+                                        return !get.info(card).unique;
+                                    },'e');
+                                },
+                                check:function(card){
+                                    return 6-get.value(card);
+                                },
+                                filterCard:function(card){
+                                    var info=lib.card[card.name];
+                                    if(!info) return false;
+                                    return !info.image&&!info.fullimage;
+                                },
+                                discard:false,
+                                lose:false,
+                                content:function(){
+                                    'step 0'
+                                    var next=player.choosePlayerCard(target,'e',true);
+                                    next.ai=get.buttonValue;
+                                    next.filterButton=function(button){
+                                        return !get.info(button.link).unique;
+                                    }
+                                    'step 1'
+                                    if(result.links[0]){
+                                        cards[0].init([result.links[0].suit,result.links[0].number,result.links[0].name,result.links[0].nature]);
+                                        event.card=cards[0];
+                                        player.chooseTarget('选择一个角色装备'+get.translation(result.links),function(card,player,target){
+                                            return !target.isMin();
+                                        }).ai=function(target){
+                                            if(!target.countCards('e',{subtype:get.subtype(event.card)})){
+                                                return get.attitude(player,target);
+                                            }
+                                            return 0;
+                                        }
+                                    }
+                                    else{
+                                        event.finish();
+                                    }
+                                    'step 2'
+                                    if(result.targets&&result.targets[0]&&event.card){
+                                        player.$give(event.card,result.targets[0]);
+                                        game.delay();
+                                        event.toequip=result.targets[0];
+                                    }
+                                    else{
+                                        event.finish();
+                                    }
+                                    'step 3'
+                                    if(event.toequip){
+                                        event.toequip.equip(event.card);
+                                    }
+                                },
+                                ai:{
+                                    order:9,
+                                    threaten:1.5,
+                                    result:{
+                                        player:function(player){
+                                            if(player.countCards('e')<3) return 1;
+                                            return 0;
+                                        }
+                                    }
+                                }
+                            },
+
+                            yxsre_taolue:{
+                                taolue:{
+                                    mod:{
+                                        maxHandcard:function(player,num){
+                                            return num+13;
+                                        }
+                                    },
+                                },
+                            },
+
+                            yxsre_bingsheng:{
+                                enable:"phaseUse",
+                                usable:1,
+                                position:"he",
+                                filterCard:function(card){
+                                    var suit=get.suit(card);
+                                    for(var i=0;i<ui.selected.cards.length;i++){
+                                        if(get.suit(ui.selected.cards[i])==suit) return false;
+                                    }
+                                    return true;
+                                },
+                                selectCard:[1,4],
+                                complexCard:true,
+                                filterTarget:function(card,player,target){
+                                    if(target.hp==Infinity) return false;
+                                    if(target.hp>player.hp&&target.hp-player.hp==ui.selected.cards.length) return true;
+                                    if(target.hp<player.hp&&target.hp<target.maxHp&player.hp-target.hp==ui.selected.cards.length) return true;
+                                    return false;
+                                },
+                                check:function(card){
+                                    return 8-get.value(card);
+                                },
+                                content:function(){
+                                    var num=target.hp-player.hp;
+                                    if(num>4){
+                                        num=4;
+                                    }
+                                    if(num<-4){
+                                        num=-4;
+                                    }
+                                    if(num>0){
+                                        target.loseHp(num);
+                                    }
+                                    else if(num<0&&target.hp<target.maxHp){
+                                        target.recover(-num);
+                                    }
+                                },
+                                ai:{
+                                    order:8.5,
+                                    result:{
+                                        target:function(player,target){
+                                            var num;
+                                            if(player.hp>target.maxHp){
+                                                num=player.hp-target.maxHp;
+                                            }
+                                            else{
+                                                num=player.hp-target.hp;
+                                            }
+                                            if(target.hp==1&&num){
+                                                return num+1;
+                                            }
+                                            return num;
+                                        }
+                                    }
+                                }
+                            },
+
                             xy_qiyuan:{
                                 trigger:{
                                     player:"phaseBegin",
@@ -179,7 +336,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_pushuo:{
-                                priority:2,
+                                priority:12,
                                 trigger:{
                                     global:"gameStart",
                                 },
@@ -190,8 +347,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 intro:{
                                     content:function(storage,player,skill){
                                         var sex='性别：'+get.translation(player.sex);
-                                        if(player.storage.yxsre_pushuo) return sex+'，可以摸一张牌，将性别转换为男性';
-                                        else return sex+'，可以弃置一张装备牌，将性别转换为女性';
+                                        if(player.storage.yxsre_pushuo) return sex+'。造成伤害后，可以摸一张牌，将性别转换为男性';
+                                        else return sex+'。回合开始前/结束后，可以弃置一张装备牌，回复1点体力，将性别转换为女性';
                                     },
                                 },
                                 init:function(player,skill){
@@ -207,19 +364,20 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 }
                             },
                             yxsre_pushuo_toMale:{
-                                priority:2,
+                                priority:11,
                                 trigger:{
-                                    player:["phaseBefore","phaseAfter"],
+                                    source:["damageEnd"],
                                 },
                                 prompt:'摸一张牌，然后将性别转变为男性',
                                 filter:function(event,player){
-                                    return player.storage.yxsre_pushuo&&_status.event.skil!='yxsre_pushuo_toFemale';
+                                    return player.storage.yxsre_pushuo;
                                 },
                                 check:function(){
                                     return true;
                                 },
                                 content:function(){
                                     player.changeZhuanhuanji('yxsre_pushuo');
+                                    /**/
                                     player.draw();
                                     player.sex='male';
                                     game.log(player,'将性别变更为','#g'+'男'+'性');
@@ -228,12 +386,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_pushuo_toFemale:{
-                                priority:2,
+                                priority:11,
                                 trigger:{
                                     player:["phaseBefore","phaseAfter"],
                                 },
                                 filter:function(event,player){
-                                    return player.countCards('he',{type:'equip'})&&!player.storage.yxsre_pushuo&&_status.event.skil!='yxsre_pushuo_toMale';
+                                    return player.countCards('he',{type:'equip'})&&!player.storage.yxsre_pushuo;
                                 },
                                 check:function(event,player){
                                     if(player.hasSkill('xiaoji')) return true;
@@ -249,6 +407,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     'step 1'
                                     if(result.bool){
                                         player.changeZhuanhuanji('yxsre_pushuo');
+                                        player.recover();
                                         player.sex='female';
                                         game.log(player,'将性别变更为','#g'+'女'+'性');
                                     }
@@ -261,7 +420,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     global:"gameStart",
                                     player:["phaseBefore","phaseAfter"],
                                 },
-                                priority:1,
+                                priority:10,
                                 forced:true,
                                 mark:true,
                                 marktext:"۞",
@@ -313,7 +472,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     list.remove('sunshangxiang');
                                     list.remove('re_sunshangxiang');
                                     list.remove('wuban');
-                                    list=list.randomGets(game.countPlayer());
+                                    list=list.randomGets(Math.max(4,game.countPlayer()));
                                     var skills=[];
                                     for(var i of list){
                                         skills.addArray((lib.character[i][3]||[]).filter(function(skill){
@@ -329,7 +488,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         _status.imchoosing=false;
                                         event._result={
                                             bool:true,
-                                            skills:skills.randomGets(play.storage.maxNum),
+                                            skills:skills.randomGets(player.storage.maxNum),
                                         };
                                         if(event.dialog) event.dialog.close();
                                         if(event.control) event.control.close();
@@ -339,7 +498,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         if(!event._result) event._result={};
                                         event._result.skills=[];
                                         var rSkill=event._result.skills;
-                                        var additionalSkillName=player.hasSex('male')?'【枭姬】':'【进讨】';
+                                        var additionalSkillName=player.hasSex('male')?'【枭姬】和一张装备牌':'【进讨】和一张【杀】';
                                         var text2=(player.storage.maxNum==1)?('，并且获得'+additionalSkillName):'';
                                         var dialog=ui.create.dialog('请选择获得'+get.cnNumber(player.storage.maxNum)+'个技能'+text2,[list,'character'],'hidden');
                                         event.dialog=dialog;
@@ -421,6 +580,47 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             info.audioname2.old_yuanshu='weidi';
                                         }
                                     },map.skills);
+                                    'step 3'
+                                    if(player.storage.maxNum==1&&player.hasSex('male')){
+                                        var card=null;
+                                        for(var i=0;i<ui.cardPile.childElementCount;i++){
+                                            var node=ui.cardPile.childNodes[i];
+                                            if(get.type(node)=='equip'){
+                                                card=node;
+                                                break;
+                                            }
+                                        }
+                                        if(!card){
+                                            for(var i=0;i<ui.discardPile.childElementCount;i++){
+                                                var node=ui.cardPile.childNodes[i];
+                                                if(get.type(node)=='equip'){
+                                                    card=node;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        player.gain(card,'gain2');
+                                    }
+                                    else if(player.storage.maxNum==1&&player.hasSex('female')){
+                                        var card=null;
+                                        for(var i=0;i<ui.cardPile.childElementCount;i++){
+                                            var node=ui.cardPile.childNodes[i];
+                                            if(node.name=='sha'){
+                                                card=node;
+                                                break;
+                                            }
+                                        }
+                                        if(!card){
+                                            for(var i=0;i<ui.discardPile.childElementCount;i++){
+                                                var node=ui.cardPile.childNodes[i];
+                                                if(node.name=='equip'){
+                                                    card=node;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        player.gain(card,'gain2');
+                                    }
                                 },
                             },
 
@@ -533,7 +733,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             if(!card){
                                                 for(var i=0;i<ui.discardPile.childElementCount;i++){
                                                     var node=ui.cardPile.childNodes[i];
-                                                    if(node.type=='basic'){
+                                                    if(get.type(node)=='basic'){
                                                         card=node;
                                                         break;
                                                     }
@@ -1121,6 +1321,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                                 content:function (){
                                     trigger.cancel();
+                                }
+                            },
+
+                            yxsre_zunzi:{
+                                mod:{
+                                    maxHandcard:function(player,num){
+                                        if(player.hp<player.maxHp) return num+player.maxHp-player.hp;
+                                    },
                                 }
                             },
 
@@ -2356,6 +2564,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_undo:"未分类",
 
                             //Character
+                            yxsre_luban:'鲁班',
+                            yxsre_sunwu:'孙武',
                             yxsre_huamulan:'花木兰',
                             yxsre_lishishi:'李师师',
                             yxsre_zhaofeiyan:'赵飞燕',
@@ -2379,23 +2589,32 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             //xinyu
                             xy_denglijun:'邓丽君',
                             xy_linzhen:'林臻',
-                            xy_yuanshangqin:'袁上钦',
+                            xy_yaosongwei:'姚松蔚',
                             xy_huangyang:'黄阳',
 
                             //Skill
+                            yxsre_guifu:'鬼斧',
+                            yxsre_guifu_info:'出牌阶段限一次，你可以弃置自己和一名其他角色的一张装备牌，然后你和其各摸一张牌。',
+                            yxsre_shengong:'神工',
+                            yxsre_shengong_info:'出牌阶段，你可以选择场上一张装备牌，用自己的一张手牌复制该装备，然后可以将之置于一名角色的装备区。',
+                            yxsre_bingsheng:'兵圣',
+                            yxsre_bingsheng_info:'出牌阶段限一次，你可以弃置X张花色不同的手牌，指定一名其他角色使其体力值与你相同（体力最多变化X点）',
+                            yxsre_taolue:'韬略',
+                            yxsre_taolue_info:'锁定技，你的手牌上限+13',
                             yxsre_pushuo:'扑朔',
                             yxsre_pushuo_toMale:'扑朔',
                             yxsre_pushuo_toFemale:'扑朔',
-                            yxsre_pushuo_info:'转换技。游戏开始时，你随机获得一个性别。准备阶段开始前/结束阶段结束后，阴：你可以弃置一张装备牌，将性别变为女性；阳：你可以摸一张牌，将性别变为男性。',
+                            yxsre_pushuo_info:'转换技。游戏开始时，你随机获得一个性别。阴：准备阶段开始前/结束阶段结束后，你可以弃置一张装备牌，回复1点体力，将性别变为女性；阳：当你造成伤害后，你可以摸一张牌，将性别变为男性。',
+                            yxsre_pushuo_append:'<span style="font-family: yuanli">雄兔脚扑朔，雌兔眼迷离；双兔傍地走，安能辨我是雄雌？</span>',
                             yxsre_mili:'迷离',
-                            yxsre_mili_info:'锁定技，游戏开始时/你的准备阶段开始前/结束阶段结束后，你从未加入游戏的武将牌中获得等于游戏人数张数的已经随机选择的性别的武将牌，然后你选择其中两个技能获得，直到你下次发动“迷离”（若你的性别与这些武将的不同，则改为选择一个技能，然后若你的性别为：男性，你获得“枭姬”；女性，你获得“进讨”），最后你随机选择一个性别。',
+                            yxsre_mili_info:'锁定技，游戏开始时/你的准备阶段开始前/结束阶段结束后，你从未加入游戏的武将牌中获得等于游戏人数张数（至少4张）的已经随机选择的性别的武将牌，然后你选择其中两个技能获得，直到你下次发动“迷离”（若你的性别与这些武将的不同，则改为选择一个技能，然后若你的性别为：男性，你获得“枭姬”和一张装备牌；女性，你获得“进讨”和一张【杀】），最后你随机选择一个性别。',
                             yxsre_hongzhuang:'红妆',
-                            yxsre_hongzhuang_info:'转换技。当你使用一张，㈠：基本牌后，你可以获得一张基本牌；㈡：锦囊牌后，你可以获得一张锦囊牌；㈢：装备牌后，你可以获得一张装备牌。',
+                            yxsre_hongzhuang_info:'转换技。出牌阶段限一次，阴：你可以弃置至少一张黑色牌，然后获得等量的红色牌；阳：你可以弃置至少一张红色牌，然后获得等量的黑色牌。',
                             yxsre_manwu:'曼舞',
                             yxsre_manwu_info:'转换技。当你使用一张，㈠：基本牌后，你可以获得一张基本牌；㈡：锦囊牌后，你可以获得一张锦囊牌；㈢：装备牌后，你可以获得一张装备牌。',
                             yxsre_rentu:'人屠',
                             yxsre_rentu_timeout:'人屠',
-                            yxsre_rentu_info:'当你使用非转换牌指定其他角色为唯一目标后，你可以令此牌对其无效，将此牌置于其武将牌上，称为“屠”，然后弃置其一张牌。当“屠”的角色失去最后手牌时，你依次对其使用这些“屠”。',
+                            yxsre_rentu_info:'当你使用非转换牌指定其他角色为唯一目标后，你可以令此牌对其无效，将此牌置于其武将牌上，称为“屠”，然后弃置其一张牌。当有“屠”的角色失去最后手牌时，你依次对其使用这些“屠”。',
                             yxsre_hufu:'胡服',
                             yxsre_hufu_info:'锁定技，若你的装备区内没有防具牌时，摸牌阶段你多摸一张牌；当你装备区内有防具牌时，你的手牌上限+3',
                             yxsre_hanbei:'捍北',
@@ -2408,8 +2627,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_yaoxing_info:'锁定技。若你没有手牌，当你受到大于等于体力值的伤害时，或失去大于等于体力值的体力时，防止之',
                             yxsre_qiwu:'起舞',
                             yxsre_qiwu_info:'新的一轮开始时，你可以令一名角色执行一个额外的出牌阶段',
+                            yxsre_zunzi:"尊姿",
+                            yxsre_zunzi_info:"锁定技。你的手牌上限基数为你的体力上限。",
                             yxsre_kongju:'控局',
-                            yxsre_kongju_info:'锁定技。你的手牌上限基数为你的体力上限。若你的手牌数小于：你的体力上限，防止你的手牌被弃置或被其他角色获得；你的体力值，摸牌阶段，你多摸一张牌；若你的手牌数大于：你的体力上限，你不会成为【乐不思蜀】目标；你的体力值，出牌阶段限一次，你可以重铸一张牌。',
+                            yxsre_kongju_info:'若你的手牌数小于：你的体力上限，防止你的手牌被弃置或被其他角色获得；你的体力值，摸牌阶段，你多摸一张牌；若你的手牌数大于：你的体力上限，你不会成为【乐不思蜀】目标；你的体力值，出牌阶段限一次，你可以重铸一张牌。',
                             yxsre_shentan:'神探',
 			                yxsre_shentan_info:'出牌阶段限一次，你可以弃置一张牌，获得距离2以内的一名角色的一张手牌，然后可以将其交给另一名角色',
                             yxsre_tuqiang:'图强',
@@ -2465,25 +2686,28 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_youyang_append:'<span style="font-family: yuanli">来吧，羽依里。用你的手，让我变成那只真正的鬼吧！</span>',
                         },
                         characterIntro:{
-                            yxsre_zhaoyong:'赵武灵王，战国中后期赵国君主，嬴姓，赵氏，名雍。赵武灵王在位时，推行的“胡服骑射”政策，赵国因而得以强盛，灭中山国，败林胡、楼烦二族，辟云中、雁门、代三郡，并修筑了“赵长城”。',
+                            yxsre_luban:'  鲁班，姓公输，名般。战国时期鲁国公族之后，故又称公输子、班输等。出身于工匠世家，是我国古代最著名的发明家、建筑家。鲁班一生发明无数，而最具贡献意义的则要数木工使用的工具，诸如墨斗、锯、和鲁班尺等。为后世的建筑学提供了最基础的工具。除此之外，相传石磨、云梯等工具也是鲁班发明。',
+                            yxsre_sunwu:'  著名军事家，字长卿，中国春秋时期齐国乐安人。曾率领吴国军队大破数倍于己的楚国军队，占领了楚国都城郢城，几乎亡楚。其著有巨作《孙子兵法》十三篇，为后世兵法家所推崇，被誉为“兵学圣典”，置于《武经七书》之首，被译为英文、法文、德文、日文，成为国际间最著名的兵学典范之书。后人尊称其为孙子、孙武子、兵圣、百世兵家之师、东方兵学的鼻祖。',
+                            yxsre_huamulan:'  花木兰是中国文学作品中的一位代父从军的巾帼英雄，其真实性不详。花木兰最早出现于南北朝一首叙事诗《木兰辞》中，该诗约作于北魏，最初录于南朝陈的《古今乐录》，僧人智匠在《古今乐录》称：“木兰不知名。”',
+                            yxsre_zhaoyong:'  赵武灵王，战国中后期赵国君主，嬴姓，赵氏，名雍。赵武灵王在位时，推行的“胡服骑射”政策，赵国因而得以强盛，灭中山国，败林胡、楼烦二族，辟云中、雁门、代三郡，并修筑了“赵长城”。',
                             yxsre_zhuyuanzhang:' 朱元璋，明王朝的开国皇帝。原名重八，后取名兴宗。汉族，濠州（今安徽凤阳县东）钟离太平乡人。朱元璋自幼贫寒，父母兄长均死于瘟疫，孤苦无依，入皇觉寺为小沙弥，入寺不到二个月，因荒年寺租难收，寺主封仓遣散众僧，只得离乡为游方僧，后参加了起义军，并改名“朱元璋”意为诛（朱）灭元朝的璋（璋，古代的一种玉器）。25岁时参加郭子兴领导的红巾军反抗蒙元暴政，在郭子兴手下，率兵出征，有攻必克；因此郭便把养女马氏嫁与了他。元至正二十八年(1368)，在基本击破各路农民起义军和扫平元的残余势力后，于南京称帝，国号大明，年号洪武，建立了全国统一的封建政权。朱元璋统治时期被称为“洪武之治”。葬于明孝陵。',
                             yxsre_lishimin:' 李世民，唐朝第二位皇帝。他的前半生是立下赫赫武功的军事家。平窦建德、王世充之后，始大量接触文学与书法，有《温泉铭》、《晋祠铭》等墨宝传世。后在玄武门之变杀死自己的兄弟李建成、李元吉两人，成为太子，唐高祖不久被迫让位。世民即位为帝后，积极听取群臣的意见、努力学习文治天下，成功转型为中国史上最出名的政治家与明君之一。唐太宗开创了历史上的“贞观之治”，经过主动消灭群雄割据势力，虚心纳谏、在国内厉行节约、使百姓休养生息，终于使得社会出现了国泰民安的局面。此举为后来的开元盛世奠定了重要的基础，将中国传统农业社会推向一个高峰。',
-                            yxsre_direnjie:'唐武周时期杰出的著名政治家，时任豫州刺史、魏州刺史等要职，官至凤阁鸾台平章事、内史，卒后追封梁国公。狄仁杰生于贞观、卒于武周时期，经历了大唐鼎盛和动乱的年代。其一生秉承了以民为本、不畏权贵、为民请命的宗旨。狄仁杰通晓了吏治、兵刑等法律制度，在任大理丞任期内解决了诸多案件，被誉为“神探”。狄仁杰为官清廉，素有政绩，有辅国安邦之能，史称“唐室砥柱”。',
-                            yxsre_goujian:'勾践，又写作句践，在出土文物“越王勾践剑”里写为鸠浅，司马贞《史记索隐》引《纪年》作菼执。是中国春秋时代后期的越国君主。有关他的先世，有说“其先禹之苗裔”，亦有说“先世无所考”，也有说他是“祝融之后”并且是楚国的芈姓，众说纷纭。父亲则是越侯允常。',
-                            yxsre_zhangsanfeng:'明朝最著名的武术家、道士。原名张通，字君宝，在武当山开山立派，成为武当派开山祖师。明英宗赐号“通微显化真人”；明宪宗特封号为“韬光尚志真仙”；明世宗赠封他为“清虚元妙真君”。传说其丰姿魁伟，大耳圆目，须髯如戟。无论寒暑，只一衲一蓑，一餐能食升斗，或数日一食，或数月不食，事能前知。其在武术上的造诣和超乎寻常的长寿都为后人称道。 曾传洪武年间，两度受朱元璋诏请入京，皆避而不见。其与明初巨贾沈万三亦有交际。其所创太极拳一直延续至今，成为后人养身妙术。',
-                            yxsre_yuefei:' 岳飞（1103年－1142年），字鹏举，相州汤阴（今属河南）人。南宋军事家，中国历史上著名的抗金名将。绍兴十一年（1142）十二月二十九日，秦桧以“莫须有”的罪名将岳飞毒死于临安风波亭。1162年，宋孝宗时诏复官，谥武穆，宁宗时追封为鄂王，改谥忠武，有《岳武穆集》传世。',
-                            yxsre_aijiyanhou:'埃及艳后即克丽奥佩托拉七世,是古埃及托勒密王朝的最后一任法老。她通过政治联姻为古埃及赢取了22年的和平。埃及艳后的一生富有戏剧性，特别是卷入罗马共和末期的政治漩涡，同恺撒、安东尼关系密切，并伴以种种传闻逸事，使她成为文学和艺术作品中的著名人物。',
-                            yxsre_mingchenghuanghou:'明成皇后，朝鲜近代史上的女政治家，本名闵兹映，通称闵妃，是朝鲜京畿道骊州郡人。她是朝鲜王朝高宗李熙的王妃，骊兴闵氏外戚集团的核心人物，19世纪末朝鲜的实际统治者。由于闵妃早期主张开放、后期力抗日本并身死殉难，故深受后世韩国人民的尊崇。 1897年，高宗李熙改国号称“大韩帝国”，追谥闵妃为“孝慈元圣正化合天明成皇后”，故现今韩国史学家多称她为“明成皇后”。',
-                            yxsre_lvzhi:'吕雉，西汉开国皇帝高祖刘邦的原配夫人，中国历史上第一位掌权的女性统治者，是历史上有记载以来的第一位皇后、皇太后。于高祖刘邦死后掌握政权，实行高祖的“黄老政治”，百姓安乐民富国强，为“文景之治”奠定了坚实的基础。',
-                            yxsre_yingzheng:'秦始皇，赢姓，赵氏，名政，秦庄襄王之子。秦始皇22岁时，在雍城举行国君成人加冕仪式，开始“亲理朝政”。后除掉吕不韦，嫪毐等人，重用李斯，尉缭。自公元前230年至前221年，采取由近及远，集中力量，各个击破的策略，先后灭六国，完成统一中国的大业。同时建立起历史上第一个书同文，度同制，车同轨，行同伦的中央集权国家——秦朝。',
-                            yxsre_yuji:'虞姬，又称虞美人，西楚霸王项羽爱姬，相传为江苏沭阳县颜集乡人，一说苏州常熟人。公元前209年，项羽与叔父项梁起义反秦。项羽军中战将虞子期的妹妹虞姬，貌美好武，倾慕年轻勇猛的项羽，嫁其为妾，常伴左右随军出征，至终形影不离。 公元前202年，项羽在垓下之战中被刘邦、韩信、彭越三方大军合围困于垓下（今安徽灵璧县城南沱河北岸城后村），身陷十面埋伏，兵孤粮缺，夜闻四面楚歌，楚军士气尽失。项羽认为大势已去，帐中酌酒，对着虞姬唱起悲壮的“垓下歌”。虞姬拔剑起舞，含泪唱和：“汉兵已略地，四面楚歌声。大王义气尽，贱妾何聊生。”为免后顾之忧影响项羽突围，唱毕于其面前自刎。',
-			                yxsre_xiangyu:'项籍（前232—前202）字羽，通常被称作项羽，中国古代著名将领及政治人物，汉族，秦下相（今江苏省宿迁市宿城区）人。秦末时被楚怀王熊心封为鲁公，在前207年的决定性战役巨鹿之战中统率楚军大破秦军。秦亡后自封“西楚霸王”，统治黄河及长江下游的梁楚九郡。后在楚汉战争中为汉高祖刘邦所败，在乌江（今安徽和县）自刎而死。',
-                            yxsre_diaochan:'中国古代四大美女之一，今山西忻州人，有野史说其姓霍，无名，又有一说称其任姓，小字红昌。貂蝉是东汉末年司徒王允的义女，国色天香，有倾国倾城之貌，相传貂婵在后花园拜月时，忽然轻风吹来，一块浮云将那皎洁的明月遮住。这时正好王允瞧见，便说我的女儿和月亮比美，月亮比不过，赶紧躲在云彩后面。此后，世人常用“闭月”来形容貂婵的美貌。',
+                            yxsre_direnjie:'  唐武周时期杰出的著名政治家，时任豫州刺史、魏州刺史等要职，官至凤阁鸾台平章事、内史，卒后追封梁国公。狄仁杰生于贞观、卒于武周时期，经历了大唐鼎盛和动乱的年代。其一生秉承了以民为本、不畏权贵、为民请命的宗旨。狄仁杰通晓了吏治、兵刑等法律制度，在任大理丞任期内解决了诸多案件，被誉为“神探”。狄仁杰为官清廉，素有政绩，有辅国安邦之能，史称“唐室砥柱”。',
+                            yxsre_goujian:'  勾践，又写作句践，在出土文物“越王勾践剑”里写为鸠浅，司马贞《史记索隐》引《纪年》作菼执。是中国春秋时代后期的越国君主。有关他的先世，有说“其先禹之苗裔”，亦有说“先世无所考”，也有说他是“祝融之后”并且是楚国的芈姓，众说纷纭。父亲则是越侯允常。',
+                            yxsre_zhangsanfeng:'  明朝最著名的武术家、道士。原名张通，字君宝，在武当山开山立派，成为武当派开山祖师。明英宗赐号“通微显化真人”；明宪宗特封号为“韬光尚志真仙”；明世宗赠封他为“清虚元妙真君”。传说其丰姿魁伟，大耳圆目，须髯如戟。无论寒暑，只一衲一蓑，一餐能食升斗，或数日一食，或数月不食，事能前知。其在武术上的造诣和超乎寻常的长寿都为后人称道。 曾传洪武年间，两度受朱元璋诏请入京，皆避而不见。其与明初巨贾沈万三亦有交际。其所创太极拳一直延续至今，成为后人养身妙术。',
+                            yxsre_yuefei:'  岳飞（1103年－1142年），字鹏举，相州汤阴（今属河南）人。南宋军事家，中国历史上著名的抗金名将。绍兴十一年（1142）十二月二十九日，秦桧以“莫须有”的罪名将岳飞毒死于临安风波亭。1162年，宋孝宗时诏复官，谥武穆，宁宗时追封为鄂王，改谥忠武，有《岳武穆集》传世。',
+                            yxsre_aijiyanhou:'  埃及艳后即克丽奥佩托拉七世,是古埃及托勒密王朝的最后一任法老。她通过政治联姻为古埃及赢取了22年的和平。埃及艳后的一生富有戏剧性，特别是卷入罗马共和末期的政治漩涡，同恺撒、安东尼关系密切，并伴以种种传闻逸事，使她成为文学和艺术作品中的著名人物。',
+                            yxsre_mingchenghuanghou:'  明成皇后，朝鲜近代史上的女政治家，本名闵兹映，通称闵妃，是朝鲜京畿道骊州郡人。她是朝鲜王朝高宗李熙的王妃，骊兴闵氏外戚集团的核心人物，19世纪末朝鲜的实际统治者。由于闵妃早期主张开放、后期力抗日本并身死殉难，故深受后世韩国人民的尊崇。 1897年，高宗李熙改国号称“大韩帝国”，追谥闵妃为“孝慈元圣正化合天明成皇后”，故现今韩国史学家多称她为“明成皇后”。',
+                            yxsre_lvzhi:'  吕雉，西汉开国皇帝高祖刘邦的原配夫人，中国历史上第一位掌权的女性统治者，是历史上有记载以来的第一位皇后、皇太后。于高祖刘邦死后掌握政权，实行高祖的“黄老政治”，百姓安乐民富国强，为“文景之治”奠定了坚实的基础。',
+                            yxsre_yingzheng:'  秦始皇，赢姓，赵氏，名政，秦庄襄王之子。秦始皇22岁时，在雍城举行国君成人加冕仪式，开始“亲理朝政”。后除掉吕不韦，嫪毐等人，重用李斯，尉缭。自公元前230年至前221年，采取由近及远，集中力量，各个击破的策略，先后灭六国，完成统一中国的大业。同时建立起历史上第一个书同文，度同制，车同轨，行同伦的中央集权国家——秦朝。',
+                            yxsre_yuji:'  虞姬，又称虞美人，西楚霸王项羽爱姬，相传为江苏沭阳县颜集乡人，一说苏州常熟人。公元前209年，项羽与叔父项梁起义反秦。项羽军中战将虞子期的妹妹虞姬，貌美好武，倾慕年轻勇猛的项羽，嫁其为妾，常伴左右随军出征，至终形影不离。 公元前202年，项羽在垓下之战中被刘邦、韩信、彭越三方大军合围困于垓下（今安徽灵璧县城南沱河北岸城后村），身陷十面埋伏，兵孤粮缺，夜闻四面楚歌，楚军士气尽失。项羽认为大势已去，帐中酌酒，对着虞姬唱起悲壮的“垓下歌”。虞姬拔剑起舞，含泪唱和：“汉兵已略地，四面楚歌声。大王义气尽，贱妾何聊生。”为免后顾之忧影响项羽突围，唱毕于其面前自刎。',
+			                yxsre_xiangyu:'  项籍（前232—前202）字羽，通常被称作项羽，中国古代著名将领及政治人物，汉族，秦下相（今江苏省宿迁市宿城区）人。秦末时被楚怀王熊心封为鲁公，在前207年的决定性战役巨鹿之战中统率楚军大破秦军。秦亡后自封“西楚霸王”，统治黄河及长江下游的梁楚九郡。后在楚汉战争中为汉高祖刘邦所败，在乌江（今安徽和县）自刎而死。',
+                            yxsre_diaochan:'  中国古代四大美女之一，今山西忻州人，有野史说其姓霍，无名，又有一说称其任姓，小字红昌。貂蝉是东汉末年司徒王允的义女，国色天香，有倾国倾城之貌，相传貂婵在后花园拜月时，忽然轻风吹来，一块浮云将那皎洁的明月遮住。这时正好王允瞧见，便说我的女儿和月亮比美，月亮比不过，赶紧躲在云彩后面。此后，世人常用“闭月”来形容貂婵的美貌。',
 
                             //xinyu
                             xy_denglijun:'',
                             xy_linzhen:'',
-                            xy_yuanshangqin:'',
+                            xy_yaosongwei:'',
                         },
 
                         characterTitle: {
@@ -2491,7 +2715,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             "yxsre_yingzheng":"始皇帝",
 
                             //xinyu
+                            "xy_linzhen":'书香门第',
                             "xy_denglijun":'何日君再来',
+                            "xy_huangyang":'耽于美色',
+                            "xy_yaosongwei":'云·风',
                         }
                     }
                     /*for (var i in yxsre.character) {
