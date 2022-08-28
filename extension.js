@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 27/08/2022 08:22:22
+ * Last Modified: 28/08/2022 11:03:11
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -112,12 +112,118 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_diaochan:['female','han',3,['yxs_zhunwu','biyue'],[]],
                             yxsre_mingchenghuanghou:['female','western',3,['yxsre_tiewan','yxsre_juecha'],[]],
                             //xinyu
+                            xy_qiusidan:['female','xin',3,['xy_shujin','xy_fuyuan'],[]],
                             xy_denglijun:['female','xin',3,['xy_miaoyin','xy_youyang'],[]],
                             xy_linzhen:['male','xin',3,['xy_zhenhui'],[]],
                             xy_yaosongwei:['male','xin',4,['xy_biqin'],[]],
                             xy_huangyang:['male','xin',3,['xy_danmei','xy_qiyuan'],[]],
                         },
                         skill:{
+                            xy_fuyuan:{
+                                trigger:{
+                                    player:["damageEnd"],
+                                },
+                                filter:function(event,player){
+                                    return event.source&&player.countCards('h');
+                                },
+                                check:function(event,player){
+                                    return -get.attitude(player,event.source);
+                                },
+                                content:function(){
+                                    'step 0'
+                                    player.chooseCard('h',get.prompt2('xy_fuyuan')).set('ai',function(card){
+                                        if(get.color(card)=='red') return 2;
+                                        else return 1;
+                                    });
+                                    'step 1'
+                                    if(result.bool){
+                                        player.logSkill('xy_fuyuan');
+                                        player.showCards(result.cards);
+                                        event.suit=get.suit(result.cards[0]);
+                                        var hs=trigger.source.getCards('h');
+                                        trigger.source.showCards(hs,get.translation(trigger.source)+'展示了所有手牌');
+                                        game.delay();
+                                        trigger.source.discard(trigger.source.getCards('he',function(card){
+                                            return get.suit(card)==event.suit;
+                                        }));
+                                    }
+                                },
+                                ai:{
+                                    "maixie_defend":true,
+                                    expose:0.4,
+                                    effect:{
+                                        target:function(card,player,target){
+                                            if(player.hasSkillTag('jueqing',false,target)) return [1,-1];
+                                            return 0.8;
+                                        },
+                                    },
+                                },
+                            },
+
+                            xy_shujin:{                                   //TODO: 
+                                trigger:{
+                                    player:["chooseToUseBegin"],
+                                },
+                                filter:function(event,player){
+                                    if(event.xy_shujin) return false;
+                                    if(event.filterCard({name:'wuxie',isCard:true},player,event)) return true;
+                                    //if(event.name!='chooseToUse') return false;
+                                    return false;
+                                },
+                                delay:false,
+                                check:function(event,player){     
+                                    return false;
+                                    /*var evt=event.getParent();          //TODO: 
+                                    return evt.player!=player&&get.attitude(player,evt.player)<0;
+                                    //return !get.attitude(player,event.player);*/
+                                },
+                                content:function(){
+                                    'step 0'
+                                    trigger.xy_shujin=true;
+                                    player.judge(function(card){
+                                        if(get.color(card)=='black') return 1.5;
+                                        return -1.5;
+                                    })
+                                    'step 1'
+                                    event.card=result.card;
+                                    if(result.judge>0){
+                                        trigger.untrigger();
+                                        trigger.set('responded',true);
+                                        trigger.result={bool:true,card:{name:'wuxie',isCard:true}};
+                                        event.goto(4);
+                                    }
+                                    else{
+                                        event.goto(2);
+                                    }
+                                    'step 2'
+                                    player.chooseBool('是否将'+get.translation(event.card)+'置牌堆顶？').set('ai',function(){
+                                        return false;
+                                    });
+                                    'step 3'
+                                    if(result.bool){
+                                        event.card.fix();
+                                        ui.cardPile.insertBefore(event.card,ui.cardPile.firstChild);
+                                    }
+                                    'step 4'
+                                    game.updateRoundNumber();
+                                },
+                                hiddenCard:function(player,name){
+                                    if(name=='wuxie') return true;
+                                },
+                                ai:{
+                                    order:11,
+                                    result:{
+                                        player:function(player,target){
+                                            if(_status.event.target) return get.attitude(player,_status.event.target);
+                                            return 1;
+                                        },
+                                    },
+                                    expose:0.2,
+                                    threaten:2,
+                                },
+                            },
+
+
                             yxsre_guifu:{
                                 enable:'phaseUse',
                                 usable:1,
@@ -275,7 +381,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 
                             xy_qiyuan:{
                                 trigger:{
-                                    player:"phaseBegin",
+                                    player:"phaseZhunbeiBegin",
                                 },
                                 frequent:true,
                                 content:function(){
@@ -1242,7 +1348,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 
                             yxsre_zhitui:{
                                 trigger:{
-                                    player:"phaseBegin",
+                                    player:"phaseZhuibeiBegin",
                                 },
                                 dutySkill:true,
                                 forced:true,
@@ -2018,6 +2124,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     return event.player.hp<=0&&(player.countCards('h','jiu')>0||player.countCards('he',{color:'black'})>=2)&&player!=event.player;
                                 },
                                 direct:true,
+                                check:function(event,player){
+                                    return event.player.hp>=-1;
+                                },
                                 content:function(){
                                     'step 0'
                                     var goon=(get.attitude(player,trigger.player)<0);
@@ -2587,6 +2696,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_mingchenghuanghou:'明成皇后',
 
                             //xinyu
+                            xy_qiusidan:'仇思丹',
                             xy_denglijun:'邓丽君',
                             xy_linzhen:'林臻',
                             xy_yaosongwei:'姚松蔚',
@@ -2671,6 +2781,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 			                yxsre_zhunwu_info:'出牌阶段开始时，你可以展示所有手牌，若其中的牌的类型数不小于：1，你可以选择一名男性角色，你与其各摸一张牌；2，你获得“离间”直到此阶段结束；3，你获得“离魂”直到此阶段结束。',
 
                             //xinyu
+                            xy_fuyuan:'负怨',
+                            xy_fuyuan_info:'当你受到伤害后，你可以展示一张手牌，然后展示伤害来源所有手牌，弃置其手牌和装备区内所有与你所展示牌花色相同的牌。',
+                            xy_shujin:'淑矜',
+                            xy_shujin_info:'当你需要使用【无懈可击】时，你可以判定，若结果为：黑色，视为你使用了【无懈可击】；红色，你可以将判定牌放置回牌堆顶。',
                             xy_qiyuan:'祈愿',
                             xy_qiyuan_info:'准备阶段，你可以判定，若结果：为红桃，你可以回复1点体力或摸两张牌；不为红桃，你选择一名角色获得判定牌。',
                             xy_danmei:'耽美',
@@ -2683,7 +2797,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_miaoyin_info:'准备阶段，你可以判定。若结果点数为1-7，你可以获得此判定牌，然后重复此流程。',
                             xy_youyang:'悠扬',
                             xy_youyang_info:'你可以将某个点数的一张牌按如下对应关系当作对应牌使用或打出：1点--【杀】，2点--【闪】，3点--【桃】，4点--【酒】，5点--【五谷丰登】，6点--【无中生有】，7点--【无懈可击】',
-                            xy_youyang_append:'<span style="font-family: yuanli">来吧，羽依里。用你的手，让我变成那只真正的鬼吧！</span>',
+                            xy_youyang_append:'<span style="font-family: yuanli">殷勤频致语，何日君再来。</span>',
                         },
                         characterIntro:{
                             yxsre_luban:'  鲁班，姓公输，名般。战国时期鲁国公族之后，故又称公输子、班输等。出身于工匠世家，是我国古代最著名的发明家、建筑家。鲁班一生发明无数，而最具贡献意义的则要数木工使用的工具，诸如墨斗、锯、和鲁班尺等。为后世的建筑学提供了最基础的工具。除此之外，相传石磨、云梯等工具也是鲁班发明。',
@@ -2715,6 +2829,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             "yxsre_yingzheng":"始皇帝",
 
                             //xinyu
+                            "xy_qiusidan":'兰质慧心',
                             "xy_linzhen":'书香门第',
                             "xy_denglijun":'何日君再来',
                             "xy_huangyang":'耽于美色',
