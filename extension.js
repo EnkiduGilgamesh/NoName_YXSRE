@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 28/08/2022 11:03:11
+ * Last Modified: 29/08/2022 01:09:41
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -80,17 +80,18 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 yxsre_chunqiu:["yxsre_yingzheng","yxsre_goujian","yxsre_zhaoyong","yxsre_baiqi",'yxsre_sunwu','yxsre_luban'],
                                 yxsre_dahan:["yxsre_lvzhi","yxsre_xiangyu","yxsre_yuji","yxsre_diaochan"],
                                 yxsre_nanbei:["yxsre_zuti","yxsre_huamulan"],
-                                yxsre_datang:["yxsre_direnjie","yxsre_lishimin"],
+                                yxsre_datang:["yxsre_direnjie","yxsre_lishimin","yxsre_yangguang"],
                                 yxsre_liangsong:["yxsre_yuefei","yxsre_lishishi"],
                                 yxsre_mingqing:["yxsre_zhuyuanzhang","yxsre_zhangsanfeng"],
 
                                 yxsre_shijie:["yxsre_mingchenghuanghou","yxsre_aijiyanhou"],
                                 xy_jinxiandai:["xy_denglijun"],
-                                xy_jinzhao:["xy_linzhen","xy_yaosongwei","xy_huangyang"],
+                                xy_jinzhao:["xy_linzhen","xy_yaosongwei","xy_huangyang","xy_qiusidan"],
                                 yxsre_undo:[],
                             },
                         },
                         character:{
+                            yxsre_yangguang:['male','shen',4,['yxsre_weihuan'],[]],
                             yxsre_luban:['male','shen',3,['yxsre_guifu','yxsre_shengong'],[]],
                             yxsre_sunwu:['male','shen',3,['yxsre_bingsheng','yxsre_taolue'],[]],
                             yxsre_huamulan:['unknown','shen',3,['yxsre_mili','yxsre_pushuo'],[]],
@@ -119,6 +120,267 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_huangyang:['male','xin',3,['xy_danmei','xy_qiyuan'],[]],
                         },
                         skill:{
+                            yxsre_weihuan:{
+                                marktext:'大业',
+                                unique:true,
+                                trigger:{
+                                    global:"phaseBefore",
+                                    player:"enterGame",
+                                },
+                                forced:true,
+                                filter:function(event,player){
+                                    return (event.name!='phase'||game.phaseNumber==0);
+                                },
+                                content:function(){
+                                    "step 0"
+                                    player.addToExpansion(get.cards(3),'gain2').gaintag.add('yxsre_weihuan');
+                                    "step 1"
+                                    var cards=player.getExpansions('yxsre_weihuan');
+                                    if(!cards.length||!player.countCards('h')){
+                                        event.finish();
+                                        return;
+                                    }
+                                    var next=player.chooseToMove('巍焕：是否交换“大业”和手牌？');
+                                    next.set('list',[
+                                        [get.translation(player)+'的“大业”',cards],
+                                        ['手牌区',player.getCards('h')],
+                                    ]);
+                                    next.set('filterMove',function(from,to){
+                                        return typeof to!='number';
+                                    });
+                                    next.set('processAI',function(list){
+                                        var player=_status.event.player,cards=list[0][1].concat(list[1][1]).sort(function(a,b){
+                                            return get.useful(a)-get.useful(b);
+                                        }),cards2=cards.splice(0,player.getExpansions('yxsre_weihuan').length);
+                                        return [cards2,cards];
+                                    });
+                                    "step 2"
+                                    if(result.bool){
+                                        var pushs=result.moved[0],gains=result.moved[1];
+                                        pushs.removeArray(player.getExpansions('yxsre_weihuan'));
+                                        gains.removeArray(player.getCards('h'));
+                                        if(!pushs.length||pushs.length!=gains.length) return;
+                                        player.addToExpansion(pushs,player,'giveAuto').gaintag.add('yxsre_weihuan');
+                                        game.log(player,'将',pushs,'作为“大业”置于武将牌上');
+                                        player.gain(gains,'gain2');
+                                    }
+                                },
+                                intro:{
+                                    markcount:"expansion",
+                                    mark:function(dialog,content,player){
+                                        var content=player.getExpansions('yxsre_weihuan');
+                                        if(content&&content.length){
+                                            if(player==game.me||player.isUnderControl()){
+                                                dialog.addAuto(content);
+                                            }
+                                            else{
+                                                return '共有'+get.cnNumber(content.length)+'张“大业”';
+                                            }
+                                        }
+                                    },
+                                    content:function(content,player){
+                                        var content=player.getExpansions('yxsre_weihuan');
+                                        if(content&&content.length){
+                                            if(player==game.me||player.isUnderControl()){
+                                                return get.translation(content);
+                                            }
+                                            return '共有'+get.cnNumber(content.length)+'张“大业”';
+                                        }
+                                    },
+                                },
+                                onremove:function(player){
+                                    player.removeGaintag('yxsre_weihuan');
+                                },
+                                group:['yxsre_weihuan_drawAfter','yxsre_weihuan_damage'],
+                                subSkill:{
+                                    drawAfter:{
+                                        trigger:{
+                                            player:"phaseDrawAfter",
+                                        },
+                                        direct:true,
+                                        filter:function(event,player){
+                                            return player.getExpansions('yxsre_weihuan').length>0&&player.countCards('h')>0;
+                                        },
+                                        content:function(){
+                                            "step 0"
+                                            var cards=player.getExpansions('yxsre_weihuan');
+                                            if(!cards.length||!player.countCards('h')){
+                                                event.finish();
+                                                return;
+                                            }
+                                            var next=player.chooseToMove('巍焕：是否交换“大业”和手牌？');
+                                            next.set('list',[
+                                                [get.translation(player)+'的"大业"',cards],
+                                                ['手牌区',player.getCards('h')],
+                                            ]);
+                                            next.set('filterMove',function(from,to){
+                                                return typeof to!='number';
+                                            });
+                                            next.set('processAI',function(list){
+                                                var player=_status.event.player,cards=list[0][1].concat(list[1][1]).sort(function(a,b){
+                                                    return get.value(a)-get.value(b);
+                                                }),cards2=cards.splice(0,player.getExpansions('yxsre_weihuan').length);
+                                                return [cards2,cards];
+                                            });
+                                            "step 1"
+                                            if(result.bool){
+                                                var pushs=result.moved[0],gains=result.moved[1];
+                                                pushs.removeArray(player.getExpansions('yxsre_weihuan'));
+                                                gains.removeArray(player.getCards('h'));
+                                                if(!pushs.length||pushs.length!=gains.length) return;
+                                                player.logSkill('yxsre_weihuan');
+                                                player.addToExpansion(pushs,player,'giveAuto').gaintag.add('yxsre_weihuan');
+                                                game.log(player,'将',pushs,'作为“大业”置于武将牌上');
+                                                player.gain(gains,'gain2');
+                                            }
+                                        },
+                                    },
+                                    damage:{
+                                        enable:'phaseUse',
+                                        filter:function(event,player){
+                                            return player.getExpansions('yxsre_weihuan').length>0;
+                                        },
+                                        chooseButton:{
+                                            dialog:function(event,player){
+                                                return ui.create.dialog('巍焕',player.getExpansions('yxsre_weihuan'),'hidden')
+                                            },
+                                            backup:function(links,player){
+                                                return {
+                                                    //audio:'paiyi',
+                                                    //audioname:['re_zhonghui'],
+                                                    filterTarget:true,
+                                                    filterCard:function(){return false},
+                                                    selectCard:-1,
+                                                    card:links[0],
+                                                    delay:false,
+                                                    content:lib.skill.yxsre_weihuan_damage.contentx,
+                                                    ai:{
+                                                        order:2,
+                                                        result:{
+                                                            target:function(player,target){             //TODO: 
+                                                                return 1;
+                                                            }
+                                                        },
+                                                    },
+                                                }
+                                            },
+                                            prompt:function(){return '请选择〖巍焕〗的目标'},
+                                            filterTarget:function(card,player,target){
+                                                return target!=player;
+                                            }
+                                        },
+                                        contentx:function(){
+                                            "step 0"
+                                            var card=lib.skill.yxsre_weihuan_damage_backup.card;
+                                            //player.logSkill('yxsre_weihuan',target);
+                                            player.loseToDiscardpile(card);
+                                            if(!player.storage.yxsre_weihuan_type) player.storage.yxsre_weihuan_type=[];
+                                            player.storage.yxsre_weihuan_type.add(get.type2(card));
+                                            "step 1"
+                                            player.addTempSkill("yxsre_weihuan2");
+                                            target.damage('nocard');
+                                        },
+                                        ai:{
+                                            order:1,
+                                            combo:"yxsre_weihuan",
+                                            result:{
+                                                target:function(player,target){
+                                                    if(target.hp==1) return -1.5;
+                                                }
+                                            },
+                                        },
+                                    },
+                                }
+                            },
+
+                            yxsre_weihuan2:{
+                                charlotte:true,
+                                group:['yxsre_weihuan2_notDead','yxsre_weihuan2_dead'],
+                                subSkill:{
+                                    notDead:{
+                                        trigger:{
+                                            global:["dyingAfter","damageEnd"],
+                                        },
+                                        forced:true,
+                                        popup:false,
+                                        filter:function(event,player){
+                                            //return event.player.isAlive()&&event.reason&&event.reason.getParent().name=='yxsre_weihuan_damage_backup';
+                                            return event.player.isAlive()&&event.getParent().name=='yxsre_weihuan_damage_backup';
+                                        },
+                                        content:function(){
+                                            player.loseMaxHp();
+                                            if(!player.hasSkill('yxsre_weihuan3')) player.addTempSkill('yxsre_weihuan3',{player:'phaseBefore'});
+                                        },
+                                    },
+                                    dead:{
+                                        trigger:{
+                                            global:["dyingAfter","damageEnd"],
+                                        },
+                                        forced:true,
+                                        popup:false,
+                                        filter:function(event,player){
+                                            //return !event.player.isAlive()&&event.reason&&event.reason.getParent().name=='yxsre_weihuan';
+                                            return !event.player.isAlive()&&event.getParent().name=='yxsre_weihuan_damage_backup';
+                                        },
+                                        content:function(){
+                                            player.gainMaxHp();
+                                            player.recover();
+                                            player.drawTo(player.maxHp);
+                                            //player.removeSkill('yxsre_weihuan2');
+                                        },
+                                    }
+                                }
+                            },
+
+                            yxsre_weihuan3:{                    //ж
+                                mark:true,
+                                marktext:'ж',
+                                intro:{
+                                    content:function(storage,player){
+                                        var text='';
+                                        for(var i of player.storage.yxsre_weihuan_type){
+                                            text+=get.translation(i)+'，';
+                                        }
+                                        text+='视为【杀】';
+                                        return text;
+                                    }
+                                },
+                                preHidden:true,
+                                mod:{
+                                    cardname:function(card,player){
+                                        if(player.storage.yxsre_weihuan_type.contains(get.type(card,null,false))) return 'sha';
+                                    },
+                                    cardUsable:function(card,player,num){
+                                        if(card.name=='sha') return Infinity;
+                                    },
+                                    targetInRange:function(card,player){
+                                        if(card.name=='sha') return true;
+                                    },
+                                },
+                                ai:{
+                                    skillTagFilter:function(player){
+                                        if(!player.countCards('h',function(card){
+                                            if(player.storage.yxsre_weihuan_type.contains(get.type(card,null,false))) return true;
+                                        })) return false;
+                                    },
+                                    respondSha:true,
+                                },
+                                audio:2,
+                                trigger:{
+                                    player:["useCard1","respond"],
+                                },
+                                firstDo:true,
+                                forced:true,
+                                filter:function(event,player){
+                                    return event.card.name=='sha'&&!event.skill&&
+                                    event.cards.length==1&&player.storage.yxsre_weihuan_type.contains(get.type(event.cards[0],null,false))
+                                },
+                                content:function(){},
+                                onremove:function(player){
+                                    if(player.storage.yxsre_weihuan_type) delete player.storage.yxsre_weihuan_type;
+                                }
+                            },
+
                             xy_fuyuan:{
                                 trigger:{
                                     player:["damageEnd"],
@@ -171,11 +433,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     return false;
                                 },
                                 delay:false,
-                                check:function(event,player){     
-                                    return false;
-                                    /*var evt=event.getParent();          //TODO: 
-                                    return evt.player!=player&&get.attitude(player,evt.player)<0;
-                                    //return !get.attitude(player,event.player);*/
+                                check:function(event, player){    
+                                    var evt=event.getParent(2);
+                                    return evt.player.getUseValue({
+                                        name:'wuxie'
+                                    })>0;
+                                    //return get.effect(notarget,{name:'wuxie'},player,player);//return false;
+                                    //var evt=event.getParent();          //TODO: 
+                                    //return evt.player!=player&&get.attitude(player,evt.player)<0;
+                                    //return !get.attitude(player,event.player);
                                 },
                                 content:function(){
                                     'step 0'
@@ -210,16 +476,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 hiddenCard:function(player,name){
                                     if(name=='wuxie') return true;
                                 },
+                                threaten:2,
                                 ai:{
                                     order:11,
-                                    result:{
-                                        player:function(player,target){
-                                            if(_status.event.target) return get.attitude(player,_status.event.target);
-                                            return 1;
-                                        },
-                                    },
                                     expose:0.2,
-                                    threaten:2,
                                 },
                             },
 
@@ -936,6 +1196,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         if(!storage) return 0;
                                         return storage[0].length;
                                     },
+                                    marktext:'屠',
                                     mark:function(dialog,storage,player){
                                         if(!storage) return;
                                         dialog.addAuto(storage[0]);
@@ -2673,6 +2934,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_undo:"未分类",
 
                             //Character
+                            yxsre_yangguang:'杨广',
                             yxsre_luban:'鲁班',
                             yxsre_sunwu:'孙武',
                             yxsre_huamulan:'花木兰',
@@ -2703,6 +2965,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_huangyang:'黄阳',
 
                             //Skill
+                            yxsre_weihuan:'巍焕',
+                            yxsre_weihuan_damage_backup:'巍焕',
+                            yxsre_weihuan2:'巍焕',
+                            yxsre_weihuan_info:'游戏开始时，你获得三张“大业”牌，然后/每个摸牌阶段结束后，你可以用手牌交换等量的“大业”牌。出牌阶段，你可以移除一张“大业”牌并选择一名其他角色，你对其造成1点伤害，然后若其：未死亡，你减1点体力上限，然后到你下一回合开始前：手牌中所有与弃置“大业”牌类型相同的牌均视为【杀】，且你使用【杀】无次数和距离限制；死亡，你增加1点体力上限和体力，然后将手牌摸至体力上限。',
                             yxsre_guifu:'鬼斧',
                             yxsre_guifu_info:'出牌阶段限一次，你可以弃置自己和一名其他角色的一张装备牌，然后你和其各摸一张牌。',
                             yxsre_shengong:'神工',
