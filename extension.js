@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 29/08/2022 01:09:41
+ * Last Modified: 29/08/2022 05:15:44
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -28,7 +28,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
             //史诗武将
             lib.rank.rarity.epic.addArray(["yxsre_lvzhi","yxsre_xiangyu",'yxsre_luban']);
             //传说武将
-            lib.rank.rarity.legend.addArray(["yxsre_yingzheng","yxsre_zhuyuanzhang","yxsre_huamulan","yxsre_sunwu"]);
+            lib.rank.rarity.legend.addArray(["yxsre_yingzheng","yxsre_zhuyuanzhang","yxsre_huamulan","yxsre_sunwu","yxsre_yangguang"]);
 
             //势力
             /*var style_yxsre_han=document.createElement('style');
@@ -120,6 +120,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_huangyang:['male','xin',3,['xy_danmei','xy_qiyuan'],[]],
                         },
                         skill:{
+                            
+
                             yxsre_weihuan:{
                                 marktext:'大业',
                                 unique:true,
@@ -191,6 +193,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 onremove:function(player){
                                     player.removeGaintag('yxsre_weihuan');
                                 },
+                                mod:{
+                                    maxHandcard:function(player,num){
+                                        return num+player.getExpansions('yxsre_weihuan').length;
+                                    },
+                                },
                                 group:['yxsre_weihuan_drawAfter','yxsre_weihuan_damage'],
                                 subSkill:{
                                     drawAfter:{
@@ -244,11 +251,20 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             dialog:function(event,player){
                                                 return ui.create.dialog('巍焕',player.getExpansions('yxsre_weihuan'),'hidden')
                                             },
+                                            check:function(button){
+                                                var player=_status.event.player;
+                                                var cards=player.getCards('h',function(card){
+                                                    return get.type(button,'trick',false)==get.type(card,'trick',false)
+                                                });
+                                                return cards.length+1;
+                                            },
                                             backup:function(links,player){
                                                 return {
                                                     //audio:'paiyi',
                                                     //audioname:['re_zhonghui'],
-                                                    filterTarget:true,
+                                                    filterTarget:function(card,player,target){
+                                                        return target!=player;
+                                                    },
                                                     filterCard:function(){return false},
                                                     selectCard:-1,
                                                     card:links[0],
@@ -257,17 +273,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                                     ai:{
                                                         order:2,
                                                         result:{
-                                                            target:function(player,target){             //TODO: 
-                                                                return 1;
+                                                            target:-1.5,
+                                                            player:function(player, target){
+                                                                var max=0;
+                                                                var cards=player.getExpansions('yxsre_weihuan');
+                                                                for(var i in cards){
+                                                                    max=Math.max(max,player.getCards('h',function(card){
+                                                                        return get.type(card,null,false)==get.type(i,null,false);
+                                                                    }))
+                                                                }
+                                                                if(target.hp>1) return -6*(1/(player.maxHp-player.hp+1))+Math.sqrt(1.5*max);
+                                                                else return Math.sqrt(player.maxHp/2+1);
                                                             }
                                                         },
                                                     },
                                                 }
                                             },
                                             prompt:function(){return '请选择〖巍焕〗的目标'},
-                                            filterTarget:function(card,player,target){
-                                                return target!=player;
-                                            }
                                         },
                                         contentx:function(){
                                             "step 0"
@@ -284,9 +306,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             order:1,
                                             combo:"yxsre_weihuan",
                                             result:{
-                                                target:function(player,target){
-                                                    if(target.hp==1) return -1.5;
-                                                }
+                                                player:1,
                                             },
                                         },
                                     },
@@ -299,7 +319,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 subSkill:{
                                     notDead:{
                                         trigger:{
-                                            global:["dyingAfter","damageEnd"],
+                                            global:["dieAfter","damageEnd"],
                                         },
                                         forced:true,
                                         popup:false,
@@ -314,7 +334,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     },
                                     dead:{
                                         trigger:{
-                                            global:["dyingAfter","damageEnd"],
+                                            global:["dieAfter","damageEnd"],
                                         },
                                         forced:true,
                                         popup:false,
@@ -323,9 +343,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             return !event.player.isAlive()&&event.getParent().name=='yxsre_weihuan_damage_backup';
                                         },
                                         content:function(){
+                                            'step 0'
                                             player.gainMaxHp();
                                             player.recover();
-                                            player.drawTo(player.maxHp);
+                                            'step 1'
+                                            player.draw(player.maxHp);
                                             //player.removeSkill('yxsre_weihuan2');
                                         },
                                     }
@@ -348,7 +370,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 preHidden:true,
                                 mod:{
                                     cardname:function(card,player){
-                                        if(player.storage.yxsre_weihuan_type.contains(get.type(card,null,false))) return 'sha';
+                                        if(player.storage.yxsre_weihuan_type.contains(get.type(card,'trick',false))) return 'sha';
                                     },
                                     cardUsable:function(card,player,num){
                                         if(card.name=='sha') return Infinity;
@@ -360,7 +382,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 ai:{
                                     skillTagFilter:function(player){
                                         if(!player.countCards('h',function(card){
-                                            if(player.storage.yxsre_weihuan_type.contains(get.type(card,null,false))) return true;
+                                            if(player.storage.yxsre_weihuan_type.contains(get.type(card,'trick',false))) return true;
                                         })) return false;
                                     },
                                     respondSha:true,
@@ -373,7 +395,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 forced:true,
                                 filter:function(event,player){
                                     return event.card.name=='sha'&&!event.skill&&
-                                    event.cards.length==1&&player.storage.yxsre_weihuan_type.contains(get.type(event.cards[0],null,false))
+                                    event.cards.length==1&&player.storage.yxsre_weihuan_type.contains(get.type(event.cards[0],'trick',false))
                                 },
                                 content:function(){},
                                 onremove:function(player){
@@ -433,15 +455,16 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     return false;
                                 },
                                 delay:false,
-                                check:function(event, player){    
-                                    var evt=event.getParent(2);
-                                    return evt.player.getUseValue({
-                                        name:'wuxie'
-                                    })>0;
-                                    //return get.effect(notarget,{name:'wuxie'},player,player);//return false;
-                                    //var evt=event.getParent();          //TODO: 
-                                    //return evt.player!=player&&get.attitude(player,evt.player)<0;
-                                    //return !get.attitude(player,event.player);
+                                check:function(event, player){
+                                    if(event&&(event.ai||event.ai1)){
+                                        var ai=event.ai||event.ai1;
+                                        var tmp=_status.event;
+                                        _status.event=event;
+                                        var result=ai({name:'wuxie'},_status.event.player,event);
+                                        _status.event=tmp;
+                                        return result>=0;
+                                    }
+                                    return true;
                                 },
                                 content:function(){
                                     'step 0'
@@ -492,6 +515,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                                 content:function(){
                                     'step 0'
+                                    //player.discardPlayerCard(player,'e',true);
                                     player.discardPlayerCard(target,'e',true);
                                     'step 1'
                                     game.asyncDraw([player,target]);
@@ -500,14 +524,25 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     order:8,
                                     threaten:1.5,
                                     result:{
-                                        target:-1,
-                                        player:0.5
+                                        order:9,
+                                        target:function(player,target){
+                                            var m=0;
+                                            var max=0;
+                                            var ecards=target.getCards('e');
+                                            for(var i of ecards){
+                                                max=Math.max(max,get.value(i,target));
+                                            }
+                                            if(target.hasSkillTag('noe')) return m=2;
+                                            return -max+m;
+                                        },
+                                        player:0.5,
                                     }
                                 }
                             },
 
                             yxsre_shengong:{
                                 enable:'phaseUse',
+                                usable:5,
                                 filterTarget:function(card,player,target){
                                     return target.hasCard(function(card){
                                         return !get.info(card).unique;
@@ -526,7 +561,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 content:function(){
                                     'step 0'
                                     var next=player.choosePlayerCard(target,'e',true);
-                                    next.ai=get.buttonValue;
+                                    next.ai=function(button){
+                                        return get.buttonValue;
+                                    }
                                     next.filterButton=function(button){
                                         return !get.info(button.link).unique;
                                     }
@@ -561,12 +598,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     }
                                 },
                                 ai:{
-                                    order:9,
+                                    order:10,
                                     threaten:1.5,
                                     result:{
-                                        player:function(player){
-                                            if(player.countCards('e')<3) return 1;
-                                            return 0;
+                                        player:function(player,target){
+                                            return 1;
+                                            /*var max=0;
+                                            var ecards=target.getCards('e');
+                                            for(var i of ecards){
+                                                if(!player.getCards('e').contains(i)) max=Math.max(max,get.value(i,target));
+                                            }
+                                            return max;*/
                                         }
                                     }
                                 }
@@ -2968,7 +3010,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_weihuan:'巍焕',
                             yxsre_weihuan_damage_backup:'巍焕',
                             yxsre_weihuan2:'巍焕',
-                            yxsre_weihuan_info:'游戏开始时，你获得三张“大业”牌，然后/每个摸牌阶段结束后，你可以用手牌交换等量的“大业”牌。出牌阶段，你可以移除一张“大业”牌并选择一名其他角色，你对其造成1点伤害，然后若其：未死亡，你减1点体力上限，然后到你下一回合开始前：手牌中所有与弃置“大业”牌类型相同的牌均视为【杀】，且你使用【杀】无次数和距离限制；死亡，你增加1点体力上限和体力，然后将手牌摸至体力上限。',
+                            yxsre_weihuan3:'巍焕',
+                            yxsre_weihuan_info:'游戏开始时，你获得三张“大业”牌，然后/每个摸牌阶段结束后，你可以用手牌交换等量的“大业”牌，你的手牌上限+X，X为“大业”牌数。出牌阶段，你可以移除一张“大业”牌并选择一名其他角色，你对其造成1点伤害，然后若其：未死亡，你减1点体力上限，然后到你下一回合开始前：手牌中所有与此阶段弃置“大业”牌类型相同的牌均视为【杀】，且你使用【杀】无次数和距离限制；死亡，你增加1点体力上限和体力，然后摸体力上限数的牌。',
+                            yxsre_weihuan_append:'<span style="font-family: yuanli">尽道隋亡为此河，至今千里赖通波。若无水殿龙舟事，共禹论功不较多。</span><br /><span style="font-size:13px; width: 300px; font-family: yuanli; text-align:center; display:inline-block;">——皮日休</span>',
                             yxsre_guifu:'鬼斧',
                             yxsre_guifu_info:'出牌阶段限一次，你可以弃置自己和一名其他角色的一张装备牌，然后你和其各摸一张牌。',
                             yxsre_shengong:'神工',
@@ -3066,6 +3110,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_youyang_append:'<span style="font-family: yuanli">殷勤频致语，何日君再来。</span>',
                         },
                         characterIntro:{
+                            yxsre_yangguang:'  隋炀帝杨广，是隋朝第二代皇帝，华阴（今陕西华阴）人，生于隋京师长安。杨广在位期间修建大运河，营建东都迁都洛阳城，开创科举制度，亲征吐谷浑，三征高句丽。但因为杨广滥用民力，导致了隋朝的灭亡，618年在江都被部下缢杀。',
                             yxsre_luban:'  鲁班，姓公输，名般。战国时期鲁国公族之后，故又称公输子、班输等。出身于工匠世家，是我国古代最著名的发明家、建筑家。鲁班一生发明无数，而最具贡献意义的则要数木工使用的工具，诸如墨斗、锯、和鲁班尺等。为后世的建筑学提供了最基础的工具。除此之外，相传石磨、云梯等工具也是鲁班发明。',
                             yxsre_sunwu:'  著名军事家，字长卿，中国春秋时期齐国乐安人。曾率领吴国军队大破数倍于己的楚国军队，占领了楚国都城郢城，几乎亡楚。其著有巨作《孙子兵法》十三篇，为后世兵法家所推崇，被誉为“兵学圣典”，置于《武经七书》之首，被译为英文、法文、德文、日文，成为国际间最著名的兵学典范之书。后人尊称其为孙子、孙武子、兵圣、百世兵家之师、东方兵学的鼻祖。',
                             yxsre_huamulan:'  花木兰是中国文学作品中的一位代父从军的巾帼英雄，其真实性不详。花木兰最早出现于南北朝一首叙事诗《木兰辞》中，该诗约作于北魏，最初录于南朝陈的《古今乐录》，僧人智匠在《古今乐录》称：“木兰不知名。”',
@@ -3091,6 +3136,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         },
 
                         characterTitle: {
+                            "yxsre_yangguang":"千古之炀",
                             "yxsre_baiqi":"武安军",
                             "yxsre_yingzheng":"始皇帝",
 
