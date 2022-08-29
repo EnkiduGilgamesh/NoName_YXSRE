@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 29/08/2022 05:15:44
+ * Last Modified: 29/08/2022 09:39:20
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -22,7 +22,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
         content:function(config,pack){
             //lib.init.css(lib.assetURL + 'extension/英雄杀RE', 'extension');
             //平凡武将
-            lib.rank.rarity.junk.addArray(['yxsre_yuefei','yxsre_goujian','yxsre_direnjie','yxsre_lishimin','yxsre_zuti','yxsre_zhaoyong','xy_linzhen','xy_yaosongwei']);
+            lib.rank.rarity.junk.addArray(['yxsre_yuefei','yxsre_goujian','yxsre_direnjie','yxsre_lishimin','yxsre_zuti','yxsre_zhaoyong','xy_linzhen','xy_yaosongwei','yxsre_chensheng']);
             //精品武将
             lib.rank.rarity.rare.addArray(["yxsre_yuji","yxsre_diaochan","yxsre_zhangsanfeng","xy_huangyang"]);
             //史诗武将
@@ -77,8 +77,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         connect:true,
                         characterSort:{
                             yxsre: {
-                                yxsre_chunqiu:["yxsre_yingzheng","yxsre_goujian","yxsre_zhaoyong","yxsre_baiqi",'yxsre_sunwu','yxsre_luban'],
-                                yxsre_dahan:["yxsre_lvzhi","yxsre_xiangyu","yxsre_yuji","yxsre_diaochan"],
+                                yxsre_chunqiu:["yxsre_yingzheng","yxsre_goujian","yxsre_zhaoyong","yxsre_baiqi",'yxsre_sunwu','yxsre_luban','yxsre_chensheng'],
+                                yxsre_dahan:["yxsre_lvzhi","yxsre_xiangyu","yxsre_yuji","yxsre_diaochan","yxsre_chensheng"],
                                 yxsre_nanbei:["yxsre_zuti","yxsre_huamulan"],
                                 yxsre_datang:["yxsre_direnjie","yxsre_lishimin","yxsre_yangguang"],
                                 yxsre_liangsong:["yxsre_yuefei","yxsre_lishishi"],
@@ -91,6 +91,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
                         },
                         character:{
+                            yxsre_chensheng:['male','qun',4,['yxsre_zhanlv','yxsre_chuxing'],[]],
                             yxsre_yangguang:['male','shen',4,['yxsre_weihuan'],[]],
                             yxsre_luban:['male','shen',3,['yxsre_guifu','yxsre_shengong'],[]],
                             yxsre_sunwu:['male','shen',3,['yxsre_bingsheng','yxsre_taolue'],[]],
@@ -113,6 +114,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_diaochan:['female','han',3,['yxs_zhunwu','biyue'],[]],
                             yxsre_mingchenghuanghou:['female','western',3,['yxsre_tiewan','yxsre_juecha'],[]],
                             //xinyu
+                            xy_yangrundi:['male','xin',4,['xy_junyi','xy_juedai'],[]],
                             xy_qiusidan:['female','xin',3,['xy_shujin','xy_fuyuan'],[]],
                             xy_denglijun:['female','xin',3,['xy_miaoyin','xy_youyang'],[]],
                             xy_linzhen:['male','xin',3,['xy_zhenhui'],[]],
@@ -120,7 +122,134 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_huangyang:['male','xin',3,['xy_danmei','xy_qiyuan'],[]],
                         },
                         skill:{
-                            
+                            yxsre_chuxing:{
+                                unique:true,
+                                enable:"phaseUse",
+                                limited:true,
+                                skillAnimation:"epic",
+                                animationColor:"fire",
+                                filterTarget:function(card,player,target){
+                                    return target!=player;
+                                },
+                                selectTarget:-1,
+                                multitarget:true,
+                                multiline:true,
+                                content:function(){
+                                    "step 0"
+                                    player.awakenSkill('yxsre_chuxing');
+                                    event.current=player.next;
+                                    event.currented=[];
+                                    event.num=0;
+                                    "step 1"
+                                    event.currented.push(event.current);
+                                    event.current.animate('target');
+                                    event.current.chooseToDiscard('楚兴：弃置一张装备区内的牌，或受到1点伤害','e',false).set('ai',function(card){
+                                        if(event.current.hp==1) return 10-get.value(card);
+                                        return 6-get.value(card);
+                                    });
+                                    "step 2"
+                                    if(!result.bool) event.current.damage();
+                                    else event.num++;
+                                    event.current=event.current.next;
+                                    if(event.current!=player&&!event.currented.contains(event.current)){
+                                        game.delay(0.5);
+                                        event.goto(1);
+                                    }
+                                    "step 3"
+                                    player.draw(event.num);
+                                },
+                                mark:true,
+                                intro:{
+                                    content:"limited",
+                                },
+                                init:function(player,skill){
+                                    player.storage[skill]=false;
+                                },
+                                ai:{
+                                    order:6,
+                                    result:{
+                                        player:function(player){
+                                            if(lib.config.mode=='identity'&&game.zhu.isZhu&&player.identity=='fan'){
+                                                if(game.zhu.hp==1&&game.zhu.countCards('e')==0) return 1.5;
+                                            }
+                                            var num=0;
+                                            var players=game.filterPlayer();
+                                            for(var i=0;i<players.length;i++){
+                                                var att=get.attitude(player,players[i]);
+                                                if(att>0) att=1;
+                                                if(att<0) att=-1;
+                                                if(players[i]!=player&&players[i].hp<=3){
+                                                    if(players[i].countCards('e')==0) num+=att/players[i].hp;
+                                                    else if(players[i].countCards('e')==1) num+=att/2/players[i].hp;
+                                                    else if(players[i].countCards('e')==2) num+=att/4/players[i].hp;
+                                                }
+                                                if(players[i].hp==1&&players[i].countCards('e')==0) num+=att*1.5;
+                                                if(players[i].hp==1&&players[i].countCards('e')>0) num+=att*0.8;
+                                            }
+                                            if(player.hp==1){
+                                                return -num;
+                                            }
+                                            if(player.hp==2){
+                                                return -game.players.length/4-num;
+                                            }
+                                            return -game.players.length/3-num;
+                                        },
+                                    },
+                                },
+                            },
+
+                            yxsre_zhanlv:{
+                                trigger:{
+                                    player:"phaseDrawBegin1",
+                                },
+                                direct:true,
+                                filter:function(event,player){
+                                    return !event.numFixed&&game.countPlayer(function(current){
+                                        return current!=player&&current.countCards('h');
+                                    });
+                                },
+                                check:function(event,player){
+                                    return game.countPlayer(function(current){
+                                        return get.attitude(player,current)<=0&&get.effect(current,{name:'guohe'},player,player)*2>=2;
+                                    })&&player.countCards('h')>=2;
+                                },
+                                content:function(){
+                                    "step 0"
+                                    event.num=2;
+                                    player.chooseTarget(get.prompt2('yxsre_zhanlv'),1,function(card,player,target){
+                                        return target.countCards('he')>1&&player!=target;
+                                    }).set('ai',function(target){
+                                        var att=get.attitude(_status.event.player,target);
+                                        if(target.hasSkill('tuntian')) return att/10;
+                                        return 1-att;
+                                    });
+                                    "step 1"
+                                    if(result.bool){
+                                        player.logSkill('yxsre_zhanlv');
+                                        trigger.changeToZero();
+                                        event.target=result.targets[0];
+                                        event.num=2;
+                                        event.goto(2);
+                                    }
+                                    else event.finish();
+                                    "step 2"
+                                    event.num--;
+                                    player.discardPlayerCard(event.target,'he',true);
+                                    "step 3"
+                                    if(result.cards){
+                                        event.card=result.cards[0];
+                                        if(get.subtype(result.cards[0],false)=='equip1'&&get.position(result.cards[0],true)=='d'){
+                                            player.gain(result.cards[0],'gain2');
+                                            player.chooseUseTarget(event.card);
+                                        }
+                                        else if(event.card.name=='sha'&&player.canUse(event.card,event.target,false)){
+                                            player.useCard(event.card,target,false);
+                                        }
+                                        if(event.num>0) event.goto(2);
+                                        else event.finish();
+                                    }
+                                }
+                            },
 
                             yxsre_weihuan:{
                                 marktext:'大业',
@@ -618,7 +747,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 taolue:{
                                     mod:{
                                         maxHandcard:function(player,num){
-                                            return num+13;
+                                            return 13;
                                         }
                                     },
                                 },
@@ -767,9 +896,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     game.log(player,'将性别变更为','#g'+get.translation(player.sex)+'性');
                                 },
                                 group:['yxsre_pushuo_toMale','yxsre_pushuo_toFemale'],
-                                subSkill:{
-                                    
-                                }
                             },
                             yxsre_pushuo_toMale:{
                                 priority:11,
@@ -2976,6 +3102,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_undo:"未分类",
 
                             //Character
+                            yxsre_chensheng:'陈胜',
                             yxsre_yangguang:'杨广',
                             yxsre_luban:'鲁班',
                             yxsre_sunwu:'孙武',
@@ -3007,6 +3134,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_huangyang:'黄阳',
 
                             //Skill
+                            yxsre_zhanlv:'斩闾',
+                            yxsre_zhanlv_info:'摸牌阶段，你可以放弃摸牌，改为依次弃置一名其他角色两张牌，若其中有：【杀】，你对其使用之；武器牌，你获得之，然后可以立即使用之。',
+                            yxsre_chuxing:'楚兴',
+                            yxsre_chuxing_info:'限定技，出牌阶段，你可以令所有角色依次选择一项：1，弃置一张装备牌，2，受到一点伤害。所有角色选择完毕后，你摸X张牌，X为以此法弃置的装备数。',
+                            yxsre_chuxing_append:'<span style="font-family: yuanli">嗟乎！燕雀安知鸿鹄之志哉！</span>',
                             yxsre_weihuan:'巍焕',
                             yxsre_weihuan_damage_backup:'巍焕',
                             yxsre_weihuan2:'巍焕',
@@ -3020,7 +3152,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_bingsheng:'兵圣',
                             yxsre_bingsheng_info:'出牌阶段限一次，你可以弃置X张花色不同的手牌，指定一名其他角色使其体力值与你相同（体力最多变化X点）',
                             yxsre_taolue:'韬略',
-                            yxsre_taolue_info:'锁定技，你的手牌上限+13',
+                            yxsre_taolue_info:'锁定技，你的手牌上限为+13',
                             yxsre_pushuo:'扑朔',
                             yxsre_pushuo_toMale:'扑朔',
                             yxsre_pushuo_toFemale:'扑朔',
@@ -3136,6 +3268,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         },
 
                         characterTitle: {
+                            "yxsre_chensheng":"首事鸿鹄",
                             "yxsre_yangguang":"千古之炀",
                             "yxsre_baiqi":"武安军",
                             "yxsre_yingzheng":"始皇帝",
