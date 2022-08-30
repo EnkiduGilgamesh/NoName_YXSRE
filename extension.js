@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 29/08/2022 09:39:20
+ * Last Modified: 30/08/2022 09:15:7
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -20,7 +20,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
     return {
         name:"英雄杀RE",
         content:function(config,pack){
-            //lib.init.css(lib.assetURL + 'extension/英雄杀RE', 'extension');
+            lib.init.css(lib.assetURL + 'extension/英雄杀RE', 'extension');
             //平凡武将
             lib.rank.rarity.junk.addArray(['yxsre_yuefei','yxsre_goujian','yxsre_direnjie','yxsre_lishimin','yxsre_zuti','yxsre_zhaoyong','xy_linzhen','xy_yaosongwei','yxsre_chensheng']);
             //精品武将
@@ -63,11 +63,26 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
             lib.group.push('xin');
             lib.translate.xin = '新';
             lib.groupnature.xin = 'orange';
+
+            lib.skill._yxsrezhenwangpeiyin = {
+				trigger: { player: 'dieBegin', },
+				priority: 2,
+				forced: true,
+				unique: true,
+				popup: false,
+				content: function () {
+					game.playAudio('..', 'extension', '英雄杀RE/audio', trigger.player.name);
+				}
+			};
+
+            //配音
+            //lib.skill.wushuang.audioname.push("yxsre_xiangyu");
         },
+        
         precontent:function(yxsre){
-    /*window.ygb_import = function (func) {
-        func(lib, game, ui, get, ai, _status);
-    };*/
+            window.yxsre_import = function (func) {
+                func(lib, game, ui, get, ai, _status);
+            };
             lib.init.js(lib.assetURL + 'extension/英雄杀RE/skin.js', null);
 
             if(yxsre.enable){
@@ -95,7 +110,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_yangguang:['male','shen',4,['yxsre_weihuan'],[]],
                             yxsre_luban:['male','shen',3,['yxsre_guifu','yxsre_shengong'],[]],
                             yxsre_sunwu:['male','shen',3,['yxsre_bingsheng','yxsre_taolue'],[]],
-                            yxsre_huamulan:['unknown','shen',3,['yxsre_mili','yxsre_pushuo'],[]],
+                            yxsre_huamulan:['unknown','shen',3,['yxsre_mili','yxsre_pushuo','yxsre_cexun'],["die_audio"]],
                             yxsre_lishishi:['female','song',3,['yxsre_manwu','yxsre_hongzhuang'],[]],
                             yxsre_baiqi:['male','daqin',4,['yxsre_rentu'],[]],
                             yxsre_zhaoyong:['male','zhou',4,['yxsre_hufu','yxsre_hanbei'],[]],
@@ -873,6 +888,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_pushuo:{
+                                audio: "ext:英雄杀RE/audio:2",
                                 priority:12,
                                 trigger:{
                                     global:"gameStart",
@@ -896,8 +912,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     game.log(player,'将性别变更为','#g'+get.translation(player.sex)+'性');
                                 },
                                 group:['yxsre_pushuo_toMale','yxsre_pushuo_toFemale'],
+                                subSkill:{
+                                    
+                                }
                             },
+
                             yxsre_pushuo_toMale:{
+                                audio:"ext:英雄杀RE/audio:1",
+                                unique:true,
                                 priority:11,
                                 trigger:{
                                     source:["damageEnd"],
@@ -910,9 +932,31 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     return true;
                                 },
                                 content:function(){
+                                    'step 0'
                                     player.changeZhuanhuanji('yxsre_pushuo');
                                     /**/
-                                    player.draw();
+                                    if(player.storage.cexunSkill){
+                                        var list=player.storage.cexunSkill;
+                                        list.push('cancel2');
+                                        delete player.storage.cexunSkill;
+                                        if(list.contains('jintao')) list.remove('jintao');
+                                        if(list.contains('xiaoji')) list.remove('xiaoji');
+                                        player.chooseControl(list);
+                                        //player.chooseControl(['请选择一个技能永久获得',list]).set('ai',function(button){
+                                        //    return Math.random();
+                                        //});
+                                    }
+                                    else event.finish();
+                                    'step 1'
+                                    if(result.control!='cancel2'){
+                                        //player.draw();
+                                        if(player.hasSkill(result.control)){
+                                            player.removeSkill(result.control);
+                                        }
+                                        player.addSkill(result.control);
+                                    }
+                                    else event.goto(2);
+                                    'step 2'
                                     player.sex='male';
                                     game.log(player,'将性别变更为','#g'+'男'+'性');
                                 },
@@ -920,9 +964,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_pushuo_toFemale:{
+                                audio:"ext:英雄杀RE/audio:1",
+                                unique:true,
                                 priority:11,
                                 trigger:{
-                                    player:["phaseBefore","phaseAfter"],
+                                    player:["phaseBegin","phaseEng"],
                                 },
                                 filter:function(event,player){
                                     return player.countCards('he',{type:'equip'})&&!player.storage.yxsre_pushuo;
@@ -946,13 +992,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         game.log(player,'将性别变更为','#g'+'女'+'性');
                                     }
                                 },
-                                //sub:true,
                             },
 
                             yxsre_mili:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 trigger:{
                                     global:"gameStart",
-                                    player:["phaseBefore","phaseAfter"],
+                                    player:["phaseBegin","phaseEng"],
                                 },
                                 priority:10,
                                 forced:true,
@@ -1100,8 +1146,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     }
                                     'step 2'
                                     var map=event.result||result;
+                                    if(!player.storage.cexunSkill) player.storage.cexunSkill=[];
+                                    player.storage.cexunSkill=map.skills;
                                     if(player.storage.maxNum==1) var additionalSkill=player.hasSex('male')?'xiaoji':'jintao';
-                                    map.skills.push(additionalSkill);
+                                    if(additionalSkill&&additionalSkill.length) map.skills.push(additionalSkill);
                                     if(map&&map.skills&&map.skills.length){
                                         player.addAdditionalSkill('yxsre_mili',map.skills);
                                     }
@@ -1158,6 +1206,47 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                             },
 
+                            yxsre_cexun:{
+                                audio:"ext:英雄杀RE/audio:2",
+                                content:function(){},
+                                group:['yxsre_cexun_Male','yxsre_cexun_Female'],
+                            },
+
+                            yxsre_cexun_Male:{
+                                audio:"ext:英雄杀RE/audio:1",
+                                trigger:{
+                                    player:"phaseDiscardBefore",
+                                },
+                                prompt:'是否增加1点体力上限',
+                                unique:true,
+                                filter:function(event,player){
+                                    return player.getStat('damage')>=3;
+                                },
+                                content:function(){
+                                    player.gainMaxHp();
+                                },
+                                //sub:true,
+                            },
+
+                            yxsre_cexun_Female:{
+                                audio:"ext:英雄杀RE/audio:1",
+                                trigger:{
+                                    player:"phaseDiscardBefore",
+                                },
+                                unique:true,
+                                prompt:'是否跳过弃牌阶段',
+                                frequent:function(event,player){
+                                    return player.needsToDiscard();
+                                },
+                                filter:function(event,player){
+                                    return !player.getStat('damage')&&player.hasSex('female');
+                                },
+                                content:function(){
+                                    player.draw();
+                                    trigger.cancel();
+                                },
+                                //sub:true,
+                            },
 
 
                             yxsre_hongzhuang:{
@@ -2645,8 +2734,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                 
                             yxsre_wushuang_modi:{				//TODO: AI rewrite
                                 shaRelated:true,
-                                //audio:2,
-                                //audioname:["re_lvbu","shen_lvbu","lvlingqi"],
+                                audio:"ext:英雄杀RE/audio:2",
+                                audioname:["yxsre_xiangyu"],
                                 forced:true,
                                 locked:true,
                                 group:["yxsre_wushuang_modi_1","yxsre_wushuang_modi_2"],
@@ -3153,13 +3242,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_bingsheng_info:'出牌阶段限一次，你可以弃置X张花色不同的手牌，指定一名其他角色使其体力值与你相同（体力最多变化X点）',
                             yxsre_taolue:'韬略',
                             yxsre_taolue_info:'锁定技，你的手牌上限为+13',
+                            yxsre_cexun:'策勋',
+                            yxsre_cexun_Male:'策勋',
+                            yxsre_cexun_Female:'策勋',
+                            yxsre_cexun_info:'弃牌阶段开始时，若你的性别为男且于此回合造成了不小于3点伤害，你可以增加1点体力上限；若你的性别为女，且此回合没有造成过伤害，你可以摸一张牌，然后跳过此阶段。',
                             yxsre_pushuo:'扑朔',
                             yxsre_pushuo_toMale:'扑朔',
                             yxsre_pushuo_toFemale:'扑朔',
-                            yxsre_pushuo_info:'转换技。游戏开始时，你随机获得一个性别。阴：准备阶段开始前/结束阶段结束后，你可以弃置一张装备牌，回复1点体力，将性别变为女性；阳：当你造成伤害后，你可以摸一张牌，将性别变为男性。',
-                            yxsre_pushuo_append:'<span style="font-family: yuanli">雄兔脚扑朔，雌兔眼迷离；双兔傍地走，安能辨我是雄雌？</span>',
+                            yxsre_pushuo_info:'转换技。游戏开始时，你随机获得一个性别。阴：准备阶段开始前/结束阶段结束后，你可以弃置一张装备牌，回复1点体力，将性别变为女性；阳：当你造成伤害后，你选择一个“迷离”选择的武将牌上的技能改为永久获得，然后将性别变为男性。',
+                            yxsre_cexun_append:'<span style="font-family: yuanli">雄兔脚扑朔，雌兔眼迷离；双兔傍地走，安能辨我是雄雌？</span>',
                             yxsre_mili:'迷离',
-                            yxsre_mili_info:'锁定技，游戏开始时/你的准备阶段开始前/结束阶段结束后，你从未加入游戏的武将牌中获得等于游戏人数张数（至少4张）的已经随机选择的性别的武将牌，然后你选择其中两个技能获得，直到你下次发动“迷离”（若你的性别与这些武将的不同，则改为选择一个技能，然后若你的性别为：男性，你获得“枭姬”和一张装备牌；女性，你获得“进讨”和一张【杀】），最后你随机选择一个性别。',
+                            yxsre_mili_info:'锁定技，游戏开始时/你的准备阶段开始前/结束阶段结束后，你从未加入游戏的武将牌中获得等于游戏人数两倍张数（至少4张）的已经随机选择的性别的武将牌，然后你选择其中两个技能获得，直到你下次发动“迷离”（若你的性别与这些武将的不同，则改为选择一个技能，然后若你的性别为：男性，你获得“枭姬”和一张装备牌；女性，你获得“进讨”和一张【杀】），最后你随机选择一个性别。',
                             yxsre_hongzhuang:'红妆',
                             yxsre_hongzhuang_info:'转换技。出牌阶段限一次，阴：你可以弃置至少一张黑色牌，然后获得等量的红色牌；阳：你可以弃置至少一张红色牌，然后获得等量的黑色牌。',
                             yxsre_manwu:'曼舞',
@@ -3234,7 +3327,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_biqin:'比钦',
                             xy_biqin_info:'锁定技。当你使用【杀】或成为【杀】的目标后，你判定，若结果为：黑色，此【杀】对所有目标无效；红色，你获得判定牌。',
                             xy_zhenhui:'振麾',
-                            xy_zhenhui_info:'若你的手牌数和体力值之和不大于2时，你可以摸两张牌。',
+                            xy_zhenhui_info:'当你的手牌数和体力值之和不大于2时，你可以摸两张牌。',
                             xy_miaoyin:'妙音',
                             xy_miaoyin_info:'准备阶段，你可以判定。若结果点数为1-7，你可以获得此判定牌，然后重复此流程。',
                             xy_youyang:'悠扬',
