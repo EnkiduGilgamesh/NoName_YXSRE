@@ -15,6 +15,10 @@
  * --------------------------------------------------------------------------------
  */
 
+/* 名词注释：
+ * 区域内：手牌+装备+判定
+ */
+
 
 game.import("extension",function(lib,game,ui,get,ai,_status){
     return {
@@ -2584,6 +2588,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                             },
 
+                            /*
+                             * 御宇,
+                             * 主公技
+                             * 当你杀死一名非忠臣角色时，你可以减一点体力上限
+                             * 将其身份改为忠臣，势力改为“秦”
+                             * 然后其失去所有技能，将体力上限改为4，体力值回复至2，弃置所有牌，最后摸两张牌
+                             */
                             yxsre_yuyu:{
                                 mode:["identity"],
                                 trigger:{
@@ -2635,10 +2646,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                             },
 
+                            /* 鸩杀,
+                             * 当有角色进入濒死状态时，你可以弃置一张【酒】或两张黑色牌
+                             * 然后该角色将体力回复至1，然后受到X+1点伤害，X为其以此法回复的体力值
+                             */
                             yxsre_zhensha:{
                                 trigger:{global:'dying'},
                                 priority:9,
                                 filter:function(event,player){
+                                    // CHECK: 限制了不能毒自己，与描述不符
                                     return event.player.hp<=0&&(player.countCards('h','jiu')>0||player.countCards('he',{color:'black'})>=2)&&player!=event.player;
                                 },
                                 direct:true,
@@ -2648,6 +2664,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 content:function(){
                                     'step 0'
                                     var goon=(get.attitude(player,trigger.player)<0);
+                                    // 错误：描述不符，1. 现在是两张黑色牌，2. 现在是回复体力至1
                                     var next=player.chooseToDiscard('鸠杀：是否弃置一张【酒】或两张黑色手牌令'+get.translation(trigger.player)+'立即死亡？','he');
                                     next.ai=function(card){
                                         if(ui.selected.cards.length){
@@ -2659,6 +2676,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         }
                                         return 0;
                                     };
+                                    // Q: 这部分完全看不懂捏
                                     next.filterCard=function(card){
                                         if(ui.selected.cards.length){
                                             return get.color(card)=='black';
@@ -2677,6 +2695,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     if(result.bool){
                                         //if(trigger.getParent().source) trigger.getParent().source=player;
                                         //trigger.player.die();
+                                        // TODO: 请测试，卖血将应该可以插入发动技能
                                         var num=1-trigger.player.hp;
                                         trigger.player.recover(num);
                                         trigger.player.damage(num+1);
@@ -2694,7 +2713,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 }
                             },
 
+                            /* 蓄谋,
+                             * 结束阶段，你可以摸X张牌，X为场上体力值等于体力上限的角色数
+                             * 然后若X不小于3，你翻面
+                             */
                             yxsre_xumou:{
+                                // CHECK: 重复数了三次有多少人受伤
                                 trigger:{
                                     player:"phaseJieshuBegin",
                                 },
@@ -2707,6 +2731,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     var num=game.countPlayer(function(current){
                                         return !current.isDamaged();
                                     });
+                                    // CHECK: 这里感觉可以不分开写
                                     if(num<3){
                                         return '蓄谋：是否摸'+get.cnNumber(num)+'张牌？';
                                     }
@@ -2967,7 +2992,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 }
                             },
 
-                            
+                            /* 楚腰,
+                             * 当你受到伤害后，你可以将任意张牌交给一名其他角色，然后若你交出的牌不小于：
+                             * 1，你摸两张牌
+                             * 2，你对伤害来源造成一点伤害
+                             * 3，你增加1点体力上限
+                             * 4，你回复1点体力
+                             */
                             yxsre_chuyao:{
                                 trigger:{player:"damageEnd"},
                                 filter:function(event,player){
@@ -2986,7 +3017,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     'step 1'
                                     if(result.bool){
                                         event.target=result.targets[0];
-                                        player.chooseCard([1, Infinity], 'he', '选择任意张牌交给' + get.translation(event.target), function (card) {
+                                        // 错误：限制了必须给牌
+                                        // 你是不是觉得写起来很麻烦，就不让给0张，哈哈哈哈哈
+                                        player.chooseCard([1, Infinity], 'he', '选择任意张牌交给' + get.(event.target), function (card) {
                                             return true;
                                         }).set('ai', function (card) {
                                             if(ui.selected.cards.length<=4) return 20;
@@ -3033,7 +3066,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     },
                                 },
                             },
-                
+
+                            /* 别姬,
+                             * 当你进入濒死状态时，或出牌阶段结束时，你可以将区域内所有牌交给一名男性角色
+                             * 若你的体力上限大于其，其增加体力上限至你的体力上限，并回复等量体力
+                             * 然后获得“无双”，若其已拥有“无双”，则修改“无双”，最后你死亡。
+                             */
                             yxsre_bieji:{
                                 trigger:{player:["dying",'phaseUseEnd']},
                                 //direct:true,
@@ -3077,6 +3115,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 derivation:['yxsre_wushuang_modi','wushuang']
                             },
                             
+                            /* 霸王,
+                             * 反贼技 锁定技
+                             * 主公的出牌阶段开始时，若你的手牌数少于你的体力值，则每少一张主公须交给你一张牌，否则受到1点伤害。
+                             * 当你杀死主公时，你与其交换身份，然后你增加1点体力上限和体力，最后将手牌摸至体力上限。
+                             */
                             yxsre_bawang:{
                                 group:'yxsre_bawang_general',
                                 mode:["identity"],
@@ -3088,6 +3131,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 unique:true,
                                 forced:true,
                                 filter:function(event,player){
+                                    // Q: 反贼技怎么把内带上了？
+                                    // Q: 为什么至少有一名敌人？
                                     return (player.identity=='fan'||player.identity=='nei')&&event.player.identity=='zhu'&&event.player.getEnemies().length>1;
                                 },
                                 content:function(event){
@@ -3113,13 +3158,16 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         },
                                         forced:true,
                                         filter:function(event,player){
+                                            // 错误：用体力上限和手牌数相减，与描述不符
                                             return event.player==game.zhu&&event.player.isZhu&&player.identity=='fan'&&player.maxHp-player.countCards('h')>0;
                                         },
                                         content:function(){
                                             'step 0'
                                             event.number=player.maxHp-player.countCards('h');
+                                            // 貌似不用判断 < 0,
                                             if(event.number<0) event.number=0;
                                             if(event.number){
+                                                // Q: 这个player是主公还是项羽
                                                 trigger.player.chooseCard([1,event.number], 'he', '选择至多'+get.cnNumber(event.number)+'张牌交给项羽', function (card) {
                                                     return true;
                                                 }).set('ai', function (card) {
@@ -3133,6 +3181,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             if(result.bool){
                                                 event.cards=result.cards;
                                                 player.gain(event.cards,trigger.player,'giveAuto');
+                                                // Q: 能否超出限制给牌导致damage造成负数伤害
                                                 trigger.player.damage(event.number-event.cards.length);
                                             }
                                             else{
@@ -3144,6 +3193,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 }
                             },
 
+                            /* 衠舞,
+			                 * 出牌阶段开始时，你可以展示所有手牌，若其中的牌的类型数不小于：
+                             * 1，你可以选择一名男性角色，你与其各摸一张牌
+                             * 2，你获得“离间”直到此阶段结束
+                             * 3，你获得“离魂”直到此阶段结束
+                             */
                             yxsre_zhunwu:{
                                 trigger:{player:'phaseUseBegin'},
                                 filter:function(event,player){
@@ -3156,6 +3211,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     player.showCards(hs,get.translation(player)+'发动了【衠舞】');
                                     var list=[];
                                     for(var i of hs){
+                                        // TODO: double check
                                         list.add(get.type2(i,player));
                                         if(list.length>=3) break;
                                     }
@@ -3169,7 +3225,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         });
                                     }
                                     'step 1'
-                                    if(result.bool) game.asyncDraw([trigger.player,result.targets[0]]);
+                                    if(result.bool) game.asyncDraw([trigger.player, result.targets[0]]);
                                     else event.finish();
                                 }
                             },
