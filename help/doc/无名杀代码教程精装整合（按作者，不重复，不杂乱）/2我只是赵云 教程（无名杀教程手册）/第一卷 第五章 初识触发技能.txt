@@ -1,0 +1,175 @@
+第一卷 第五章 初识触发技能
+　　0.5：简介
+
+　　什么样的技能该写成触发类？就像我们常常看到的，回合开始阶段，回合结束阶段，指定一名目标后，都是触发类，这类技能占了大多数。
+
+　　模板：
+
+　　audio:2,
+
+　　trigger:{player:'phaseBegin'},
+
+　　//这片区域填写 forced:true,direct:true,等等一些需要声明的
+
+　　filter:function(event,player){
+
+　　if() return true;
+
+　　return false;
+
+　　},
+
+　　content:function(){
+
+　　'step 0'
+
+　　.
+
+　　.
+
+　　'step 1'
+
+　　.
+
+　　.
+
+　　}
+
+　　//这个技能删除了执行部分。
+
+　　1.0：触发时机：//第二个单词要首字母大写、第三个也如此……
+
+　　这个也就是触发这个技能的条件
+
+　　首先写好 trigger:{xxx1:'xxx2'},
+
+　　xxx1:可替换内容 player global target source
+
+　　xxx2:拥有的触发条件经我回忆，有这么几种
+
+　　gameDrawAfter 所有人摸牌结束之后，游戏开始
+
+　　phaseBofore 回合开始前
+
+　　phaseBegin 回合开始阶段
+
+　　phaseJudgeBegin 判定阶段开始时
+
+　　phaseJudgeBefore判定阶段开始前
+
+　　phaseJudge 判定阶段
+
+　　phaseDrawBefore摸牌之前
+
+　　phaseDrawBegin摸牌之时
+
+　　phaseDrawEnd摸牌结束
+
+　　phaseUseBefore出牌阶段之前
+
+　　phaseUseBegin出牌阶段开始时
+
+　　phaseUseEnd出牌阶段结束时
+
+　　phaseDiscardBefore弃牌阶段之前
+
+　　phaseDiscardBegin弃牌阶段开始时
+
+　　phaseDiscardEnd弃牌阶段结束时
+
+　　phaseEnd回合结束时
+
+　　loseEnd失去一张牌时
+
+　　gainEnd获得一张牌后
+
+　　chooseToRespondBegin打出一张牌响应之前
+
+　　chooseToUseBegin使用一张牌后
+
+　　damageEnd受伤害后
+
+　　shaMiss杀被闪避
+
+　　（触发条件有很多，可能不全，欢迎补充）
+
+　　比如你要写
+
+　　玩家失去一张牌之后 trigger:{player:'loseEnd'},
+
+　　同理若你有多个触发条件
+
+　　玩家失去或获得一张牌后trigger:{player:['loseEnd','gainEnd']},
+
+　　附加说明：
+
+　　global 代表所有人 比如全场其他角色摸牌阶段开始时触发 trigger:{global:'phaseDrawBegin'},
+
+　　target 代表你成为目标 当你成为【杀】目标的时候 trigger:{target:'shaBefore'},
+
+　　source 代表来源是你 当你造成伤害之后 trigger:{source:'damageEnd'},
+
+　　1.5：通过某个事件触发的技能。触发时机的写法为事件角色+事件名+事件时机，事件时机分为开始前（Before）、开始时（Begin）、结束时（End）及结束后（After）
+
+　　举例：英姿
+
+　　trigger:{player:'phaseDrawBegin'},
+
+　　content:function(){
+
+　　trigger.num++;
+
+　　}
+
+　　player：触发时件中，技能拥有者的角色为事件的发起者
+
+　　phaseDraw：摸牌阶段
+
+　　Begin：事件时机为开始时
+
+　　content：技能内容，trigger为触发此技能的事件，即摸牌阶段，该事件的摸牌数为num，trigger.num++即让摸牌阶段的摸牌数+1
+
+　　举例：激昂（杀）
+
+　　trigger:{player:'shaBegin',target:'shaBegin'},
+
+　　filter:function(event,player){
+
+　　return get.color(event.card)=='red';
+
+　　},
+
+　　content:function(){
+
+　　player.draw();
+
+　　}
+
+　　player:'shaBegin',target:'shaBegin'：代表技能拥有者作为事件（杀）的使用者或事件的目标时皆可触发
+
+　　举例：旧秘计（仅摸牌部分）
+
+　　trigger:{player:['phaseBegin','phaseEnd']},
+
+　　filter:function(event,player){
+
+　　return player.hp
+　　},
+
+　　content:function(){
+
+　　'step 0'
+
+　　player.judge();
+
+　　'step 1'
+
+　　if(result.color=='black'){
+
+　　player.draw(player.maxHp-player.hp);
+
+　　}
+
+　　}
+
+　　['phaseBegin','phaseEnd']：多个触发事件用数组表示

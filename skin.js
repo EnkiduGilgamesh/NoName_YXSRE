@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 30/08/2022 10:17:33
+ * Last Modified: 31/08/2022 01:32:27
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -252,26 +252,50 @@ window.yxsre_import(function(lib,game,ui,get,ai,_status){
                 }
             },
 
-            'yxsre_huamulan_jiuyaoshenhui':{
+            'yxsre_huamulan_jiuxiaoshenhui':{
                 level:"限定",
-                translation:"九曜神辉",
+                translation:"九霄神辉",
                 info:"",
                 order:1,//显示顺序，号越小越前面。
                 skill:{
                     'yxsre_mili':{
                         order:1,
-                        content:'①。<br>②。。',
+                        content:'①皓皓，如朗月之华；昭昭，如赤日之辉。<br>②尽销九州兵甲，铸就天地明光。',
                     },
                     'yxsre_pushuo':{
                         order:2,
-                        content:'①。<br>②',
+                        content:'①剑出破混沌，剑落定乾坤。<br>②悬寂寂长夜之中，渡征人归途。',
                     },
                     'yxsre_cexun':{
                         order:3,
-                        content:'①。<br>②。',
+                        content:'①但见黎明安康，又何求一将功成。<br>②水深激激，蒲苇冥冥。',
                     },
                     'die':{
-                        content:'。',
+                        content:'但见沙场功勋，转瞬化为尘与土。',
+                    }
+                }
+            },
+
+            'yxsre_huamulan_jiuxiaoshenhui_dynamic':{
+                level:"限定",
+                translation:"九霄神辉·动态",
+                info:"",
+                order:1,//显示顺序，号越小越前面。
+                skill:{
+                    'yxsre_mili':{
+                        order:1,
+                        content:'①皓皓，如朗月之华；昭昭，如赤日之辉。<br>②尽销九州兵甲，铸就天地明光。',
+                    },
+                    'yxsre_pushuo':{
+                        order:2,
+                        content:'①剑出破混沌，剑落定乾坤。<br>②悬寂寂长夜之中，渡征人归途。',
+                    },
+                    'yxsre_cexun':{
+                        order:3,
+                        content:'①但见黎明安康，又何求一将功成。<br>②水深激激，蒲苇冥冥。',
+                    },
+                    'die':{
+                        content:'但见沙场功勋，转瞬化为尘与土。',
                     }
                 }
             },
@@ -284,18 +308,18 @@ window.yxsre_import(function(lib,game,ui,get,ai,_status){
                 skill:{
                     'yxsre_mili':{
                         order:1,
-                        content:'①。<br>②。。',
+                        content:'①也很百变，也很善变。<br>②哼~有我在，对面没有机会集中精力。',
                     },
                     'yxsre_pushuo':{
                         order:2,
-                        content:'①。<br>②',
+                        content:'①呃~呃~~拒绝签名合影。<br>②喂~看哪呢？',
                     },
                     'yxsre_cexun':{
                         order:3,
-                        content:'①。<br>②。',
+                        content:'①战争，感性又好玩。<br>②欢迎光临~',
                     },
                     'die':{
-                        content:'。',
+                        content:'啊~一点都不可爱~',
                     }
                 }
             },
@@ -308,18 +332,18 @@ window.yxsre_import(function(lib,game,ui,get,ai,_status){
                 skill:{
                     'yxsre_mili':{
                         order:1,
-                        content:'①。<br>②。。',
+                        content:'①时势造英雄，英雄亦造时势。<br>②临兵斗者，皆阵列前行。',
                     },
                     'yxsre_pushuo':{
                         order:2,
-                        content:'①。<br>②',
+                        content:'①神兽不发威，当我是锦鲤。<br>②麒麟踏祥云，人间百难消。',
                     },
                     'yxsre_cexun':{
                         order:3,
-                        content:'①。<br>②。',
+                        content:'①云彩是神圣之物。<br>②无人可见，无人能敌。',
                     },
                     'die':{
-                        content:'。',
+                        content:'别哭，我会再次降临。',
                     }
                 }
             },
@@ -332,18 +356,18 @@ window.yxsre_import(function(lib,game,ui,get,ai,_status){
                 skill:{
                     'yxsre_mili':{
                         order:1,
-                        content:'①。<br>②。。',
+                        content:'①轻松挥舞球棒，魅力撬动全场。<br>②赛季在变，击球手的精准永远不变。',
                     },
                     'yxsre_pushuo':{
                         order:2,
-                        content:'①。<br>②',
+                        content:'①常规操作~淡定。<br>②女孩的心，正如棒球轨迹一般，你猜不透。',
                     },
                     'yxsre_cexun':{
                         order:3,
-                        content:'①。<br>②。',
+                        content:'①你也能来个全垒打吗？<br>②青春，就是挥汗如雨的练习。',
                     },
                     'die':{
-                        content:'。',
+                        content:'可恶，姐支持的球队怎么会输。',
                     }
                 }
             },

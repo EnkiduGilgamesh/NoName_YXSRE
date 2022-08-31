@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 30/08/2022 09:15:7
+ * Last Modified: 31/08/2022 09:59:35
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -101,7 +101,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 
                                 yxsre_shijie:["yxsre_mingchenghuanghou","yxsre_aijiyanhou"],
                                 xy_jinxiandai:["xy_denglijun"],
-                                xy_jinzhao:["xy_linzhen","xy_yaosongwei","xy_huangyang","xy_qiusidan"],
+                                xy_jinzhao:["xy_linzhen","xy_yaosongwei","xy_huangyang","xy_qiusidan","xy_yangrundi"],
                                 yxsre_undo:[],
                             },
                         },
@@ -129,7 +129,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_diaochan:['female','han',3,['yxs_zhunwu','biyue'],[]],
                             yxsre_mingchenghuanghou:['female','western',3,['yxsre_tiewan','yxsre_juecha'],[]],
                             //xinyu
-                            xy_yangrundi:['male','xin',4,['xy_junyi','xy_juedai'],[]],
+                            xy_yangrundi:['male','xin',4,['xy_jihong','xy_rongyang'],[]],
                             xy_qiusidan:['female','xin',3,['xy_shujin','xy_fuyuan'],[]],
                             xy_denglijun:['female','xin',3,['xy_miaoyin','xy_youyang'],[]],
                             xy_linzhen:['male','xin',3,['xy_zhenhui'],[]],
@@ -137,6 +137,112 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_huangyang:['male','xin',3,['xy_danmei','xy_qiyuan'],[]],
                         },
                         skill:{
+                            xy_polv:{
+                                trigger:{
+                                    player:"phaseEnd",
+                                },
+                                forced:true,
+                                skillAnimation:true,
+                                animationColor:"water",
+                                unique:true,
+                                filter:function(event,player){
+                                    return game.countPlayer(function(current){
+                                        var history_damage=current.getHistory('damage',function(evt){
+                                            return true;
+                                        }), num_damage=0;
+                                        for(var i of history_damage){
+                                            num_damage+=i.num;
+                                        }
+                                        var history_recover=current.getHistory('recover',function(evt){
+                                            return true;
+                                        }), num_recover=0;
+                                        num_recover=history_recover.length;
+                                        /*for(var i of history_recover){
+                                            num_recover+=i.num;
+                                        }*/
+                                        return num_recover>num_damage;
+                                    });
+                                },
+                                content:function(){
+                                    player.awakenSkill('xy_polv');
+                                    player.draw(5);
+                                }
+                            },
+
+                            xy_jihong:{
+                                trigger:{
+                                    player:'phaseUseBegin',
+                                },
+                                filter:function(){
+                                    return true;
+                                },
+                                content:function(){
+                                    'step 0'
+                                    if(!player.storage.jihong_target) player.storage.jihong_target=null;
+                                    player.chooseTarget('对一名角色造成1点伤害',true).set('ai',function(target){
+                                        //if(get.attitude(player,target)&&target.hp>1&&target.hasSkillTag('maixue')) return
+                                        if(get.attitude(player,target)){
+                                            if(target.hp>1&&target.hasSkillTag('maixue')) return get.damageEffect(target,player,target);
+                                            if(target.hp>1&&target.hp==target.maxHp) return 1;
+                                            return 0;
+                                        }
+                                        else{
+                                            if(target.hp>1&&target.hasSkillTag('maixue')) return get.damageEffect(target,player,target);
+                                            if(target.hp>1&&target.hp==target.maxHp) return 0.5;
+                                            if(target.hp==1) get.damageEffect(target,player,target);
+                                            return get.damageEffect(target,player,target)/2;
+                                        }
+                                    })
+                                    'step 1'
+                                    if(result.bool){
+                                        player.storage.jihong_target=result.targets[0];
+                                        player.storage.jihong_target.damage();
+                                    }
+                                    else event.finish();
+                                },
+                                group:'xy_jihong_end',
+                                subSkill:{
+                                    end:{
+                                        forced:true,
+                                        trigger:{
+                                            player:'phaseJieshuBegin',
+                                        },
+                                        filter:function(event,player){
+                                            return player.storage.jihong_target;
+                                        },
+                                        content:function(){
+                                            'step 0'
+                                            var history=player.storage.jihong_target.getHistory('damage',function(evt){
+                                                return evt.source==player&&evt.isPhaseUsing();
+                                            }), num=0;
+                                            for(var i of history){
+                                                num+=i.num;
+                                            }
+                                            if(num){
+                                                player.storage.jihong_target.recover(num);
+                                            }
+                                            'step 1'
+                                            delete player.storage.jihong_target;
+                                        },
+                                        sub:true,
+                                    }
+                                }
+                                
+                            },
+
+                            xy_rongyang:{
+                                prompt:'是否摸一张牌',
+                                trigger:{
+                                    global:["recoverAfter","loseMaxHpEnd"],
+                                },
+                                filter:function(event,player){
+                                    return event.player.hp==event.player.maxHp;
+                                },
+                                content:function(){
+                                    player.draw();
+                                }
+                            },
+
                             yxsre_chuxing:{
                                 unique:true,
                                 enable:"phaseUse",
@@ -718,9 +824,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         player.chooseTarget('选择一个角色装备'+get.translation(result.links),function(card,player,target){
                                             return !target.isMin();
                                         }).ai=function(target){
-                                            if(!target.countCards('e',{subtype:get.subtype(event.card)})){
-                                                return get.attitude(player,target);
-                                            }
+                                            //if(!target.countCards('e',{subtype:get.subtype(event.card)})){
+                                            return get.effect(target,event.card,player,player);
+                                            //}
                                             return 0;
                                         }
                                     }
@@ -3216,6 +3322,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_mingchenghuanghou:'明成皇后',
 
                             //xinyu
+                            xy_yangrundi:'杨润地',
                             xy_qiusidan:'仇思丹',
                             xy_denglijun:'邓丽君',
                             xy_linzhen:'林臻',
@@ -3241,7 +3348,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_bingsheng:'兵圣',
                             yxsre_bingsheng_info:'出牌阶段限一次，你可以弃置X张花色不同的手牌，指定一名其他角色使其体力值与你相同（体力最多变化X点）',
                             yxsre_taolue:'韬略',
-                            yxsre_taolue_info:'锁定技，你的手牌上限为+13',
+                            yxsre_taolue_info:'锁定技，你的手牌上限为13',
                             yxsre_cexun:'策勋',
                             yxsre_cexun_Male:'策勋',
                             yxsre_cexun_Female:'策勋',
@@ -3316,6 +3423,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 			                yxsre_zhunwu_info:'出牌阶段开始时，你可以展示所有手牌，若其中的牌的类型数不小于：1，你可以选择一名男性角色，你与其各摸一张牌；2，你获得“离间”直到此阶段结束；3，你获得“离魂”直到此阶段结束。',
 
                             //xinyu
+                            xy_polv:'魄虑',
+                            xy_jihong:'羁鸿',
+                            xy_rongyang:'荣飏',
                             xy_fuyuan:'负怨',
                             xy_fuyuan_info:'当你受到伤害后，你可以展示一张手牌，然后展示伤害来源所有手牌，弃置其手牌和装备区内所有与你所展示牌花色相同的牌。',
                             xy_shujin:'淑矜',
@@ -3367,6 +3477,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             "yxsre_yingzheng":"始皇帝",
 
                             //xinyu
+                            "xy_yangrundi":'一代の天骄',
                             "xy_qiusidan":'兰质慧心',
                             "xy_linzhen":'书香门第',
                             "xy_denglijun":'何日君再来',

@@ -1,0 +1,154 @@
+第一卷 终章 初识视为技能
+　　主要代码viewAs:{" 卡牌名字"},
+
+　　1.0：简介武圣：
+
+　　audio:'xx',
+
+　　enable:['chooseToRespond','chooseToUse'],
+
+　　filterCard:function(card){
+
+　　return get.color(card)=='red';
+
+　　},
+
+　　position:'he',
+
+　　viewAs:{name:'sha'},
+
+　　viewAsFilter:function(player){
+
+　　if(!player.num('he',{color:'red'})) return false;
+
+　　},
+
+　　prompt:'将一张红色牌当杀使用或打出',
+
+　　如果你只想把手牌当做某张牌，将position改为你想要的。前文提过：h代表手牌，e代表装备区的牌，j代表判定区的牌
+
+　　position:'h', 手牌
+
+　　position:'he',手牌+装备区
+
+　　position:'hej', 手牌+装备区+判定区
+
+　　无非这么三种,不写就是默认手牌。
+
+　　2.0：半自动视为技能
+
+　　龙胆
+
+　　longdan:{
+
+　　group:['longdan_sha','longdan_shan'],
+
+　　subSkill:{
+
+　　sha:{
+
+　　audio:2,
+
+　　enable:['chooseToUse','chooseToRespond'],
+
+　　filterCard:{name:'shan'},
+
+　　viewAs:{name:'sha'},
+
+　　viewAsFilter:function(player){
+
+　　if(!player.num('h','shan')) return false;
+
+　　},
+
+　　prompt:'将一张闪当杀使用或打出',
+
+　　check:function(){return 1},
+
+　　ai:{
+
+　　effect:{
+
+　　target:function(card,player,target,current){
+
+　　if(get.tag(card,'respondSha')&¤t<0) return 0.6
+
+　　}
+
+　　},
+
+　　respondSha:true,
+
+　　skillTagFilter:function(player){
+
+　　if(!player.num('h','shan')) return false;
+
+　　},
+
+　　order:4,
+
+　　useful:-1,
+
+　　value:-1
+
+　　}
+
+　　},
+
+　　shan:{
+
+　　audio:2,
+
+　　enable:['chooseToRespond'],
+
+　　filterCard:{name:'sha'},
+
+　　viewAs:{name:'shan'},
+
+　　prompt:'将一张杀当闪打出',
+
+　　check:function(){return 1},
+
+　　ai:{
+
+　　respondShan:true,
+
+　　skillTagFilter:function(player){
+
+　　if(!player.num('h','sha')) return false;
+
+　　},
+
+　　effect:{
+
+　　target:function(card,player,target,current){
+
+　　if(get.tag(card,'respondShan')&¤t<0) return 0.6
+
+　　}
+
+　　},
+
+　　order:4,
+
+　　useful:-1,
+
+　　value:-1
+
+　　}
+
+　　}
+
+　　}
+
+　　},
+
+　　'chooseToRespond'这个是响应
+
+　　'chooseToUse'这个是主动用
+
+　　forced:true,自动发动，与被动技能差不多，但是国战可以触发亮将。
+
+　　被动触发视为技能=被动技能mod
+
+　　点击下载安卓手机客户端：阅听书城小说，第一时间阅读本书最新章节
