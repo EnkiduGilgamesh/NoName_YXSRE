@@ -109,6 +109,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 yxsre_undo:[],
                             },
                         },
+
                         character:{
                             yxsre_chensheng:['male','qun',4,['yxsre_zhanlv','yxsre_chuxing'],[]],
                             yxsre_yangguang:['male','shen',4,['yxsre_weihuan'],[]],
@@ -140,6 +141,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_yaosongwei:['male','xin',4,['xy_biqin'],[]],
                             xy_huangyang:['male','xin',3,['xy_danmei','xy_qiyuan'],[]],
                         },
+
                         skill:{
                             yxsre_chuxing:{
                                 unique:true,
@@ -2367,6 +2369,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 }
                             },
 
+                            /* 铁腕,
+                             * 当你造成伤害后或有其他角色使用延时锦囊牌后
+                             * 你可以将一张红色牌当作【乐不思蜀】或将一张黑色牌当作【兵粮寸断】使用
+                             */
                             yxsre_tiewan:{
                                 trigger:{
                                     source:'damageEnd',
@@ -2375,6 +2381,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                                 direct:true,
                                 filter:function(event,player){
+                                    // TODO: check
                                     if(event.card) return get.type(event.card.viewAs||event.card.name)=='delay'&&event.player!=player&&event.player.countCards('he');
                                     else return event.player.countCards('he');
                                 },
@@ -2537,6 +2544,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 }
                             },
 
+                            /* 霸图,
+                             * 一名角色的回合结束后，你可以将手牌数补至X，X为场上的势力数。
+                             * “秦”势力角色回合开始前，你可以弃置至多两张牌，然后其摸等量的牌。
+                             */
                             yxsre_batu:{
                                 trigger:{global:'phaseAfter'},
                                 frequent:true,
@@ -2588,8 +2599,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                             },
 
-                            /*
-                             * 御宇,
+                            /* 御宇,
                              * 主公技
                              * 当你杀死一名非忠臣角色时，你可以减一点体力上限
                              * 将其身份改为忠臣，势力改为“秦”
@@ -2609,7 +2619,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     return event.player.identity!='zhong'&&event.player.identity!='mingzhong'&&player.getEnemies().length>1;
                                 },
                                 prompt:function(event,player){
-                                    return '寓宇：是否减1点体力上限令其身份改为忠臣';
+                                    return '御宇：是否减1点体力上限令其身份改为忠臣';
                                 },
                                 content:function(){
                                     game.broadcastAll(function(player,target,shown){
@@ -3230,6 +3240,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 }
                             },
                         },
+
                         translate:{
                             //
                             yxsre:'英雄杀RE',
@@ -3390,6 +3401,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_youyang_info:'你可以将某个点数的一张牌按如下对应关系当作对应牌使用或打出：1点--【杀】，2点--【闪】，3点--【桃】，4点--【酒】，5点--【五谷丰登】，6点--【无中生有】，7点--【无懈可击】',
                             xy_youyang_append:'<span style="font-family: yuanli">殷勤频致语，何日君再来。</span>',
                         },
+                        
                         characterIntro:{
                             yxsre_yangguang:'  隋炀帝杨广，是隋朝第二代皇帝，华阴（今陕西华阴）人，生于隋京师长安。杨广在位期间修建大运河，营建东都迁都洛阳城，开创科举制度，亲征吐谷浑，三征高句丽。但因为杨广滥用民力，导致了隋朝的灭亡，618年在江都被部下缢杀。',
                             yxsre_luban:'  鲁班，姓公输，名般。战国时期鲁国公族之后，故又称公输子、班输等。出身于工匠世家，是我国古代最著名的发明家、建筑家。鲁班一生发明无数，而最具贡献意义的则要数木工使用的工具，诸如墨斗、锯、和鲁班尺等。为后世的建筑学提供了最基础的工具。除此之外，相传石磨、云梯等工具也是鲁班发明。',
