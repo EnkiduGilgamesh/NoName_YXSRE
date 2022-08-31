@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 31/08/2022 09:59:35
+ * Last Modified: 31/08/2022 11:31:14
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -3120,9 +3120,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 filter:function(event,player){
                                     return player.countCards('he');
                                 },
-                                //filterTarget:function(card,player,target){
-                                //	return player!=target;
-                                //},
                                 content:function(){
                                     'step 0'
                                     player.chooseTarget(get.prompt('yxsre_chuyao'),'交给一名其他角色任意张牌',function(card,player,target){
@@ -3135,7 +3132,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         event.target=result.targets[0];
                                         // 错误：限制了必须给牌
                                         // 你是不是觉得写起来很麻烦，就不让给0张，哈哈哈哈哈
-                                        player.chooseCard([1, Infinity], 'he', '选择任意张牌交给' + get.(event.target), function (card) {
+                                        player.chooseCard([1, Infinity], 'he', '选择任意张牌交给' + get.translation(event.target), function (card) {
                                             return true;
                                         }).set('ai', function (card) {
                                             if(ui.selected.cards.length<=4) return 20;
