@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 31/08/2022 11:31:14
+ * Last Modified: 1/09/2022 01:46:22
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -80,7 +80,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 			};
 
             //配音
-            //lib.skill.wushuang.audioname.push("yxsre_xiangyu");
+            lib.skill.wushuang.audioname.push("yxsre_xiangyu");
         },
         
         precontent:function(yxsre){
@@ -134,7 +134,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_diaochan:['female','han',3,['yxs_zhunwu','biyue'],[]],
                             yxsre_mingchenghuanghou:['female','western',3,['yxsre_tiewan','yxsre_juecha'],[]],
                             //xinyu
-                            xy_yangrundi:['male','xin',4,['xy_jihong','xy_rongyang'],[]],
+                            xy_yangrundi:['male','xin',4,['xy_jihong','xy_rongyang','xy_polv'],[]],
                             xy_qiusidan:['female','xin',3,['xy_shujin','xy_fuyuan'],[]],
                             xy_denglijun:['female','xin',3,['xy_miaoyin','xy_youyang'],[]],
                             xy_linzhen:['male','xin',3,['xy_zhenhui'],[]],
@@ -151,28 +151,98 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 skillAnimation:true,
                                 animationColor:"water",
                                 unique:true,
+                                derivation:['xingshang','luanwu','xinfu_qiai','baiyi'],
                                 filter:function(event,player){
-                                    return game.countPlayer(function(current){
-                                        var history_damage=current.getHistory('damage',function(evt){
-                                            return true;
-                                        }), num_damage=0;
-                                        for(var i of history_damage){
-                                            num_damage+=i.num;
-                                        }
-                                        var history_recover=current.getHistory('recover',function(evt){
-                                            return true;
-                                        }), num_recover=0;
-                                        num_recover=history_recover.length;
-                                        /*for(var i of history_recover){
-                                            num_recover+=i.num;
-                                        }*/
-                                        return num_recover>num_damage;
-                                    });
+                                    /*return game.countPlayer(function(current){
+                                        if(!current.storage.hpMark) return false;
+                                        if(current.hp>current.storage.hpMark) return true;
+                                        return false;
+                                    });*/
+                                    return true;
                                 },
                                 content:function(){
+                                    'step 0'
+                                    for(var i of game.players){
+                                        if(i.storage.hpMark) delete i.storage.hpMark;
+                                    }
                                     player.awakenSkill('xy_polv');
-                                    player.draw(5);
-                                }
+                                    player.loseMaxHp();
+                                    player.addSkillLog('xingshang');
+                                    'step 1'
+                                    var list=['乱武','七哀','败移'];
+                                    event.videoId=lib.status.videoId++;
+                                    var func=function(id){
+                                        var dialog=ui.create.dialog('forcebutton');
+                                        dialog.videoId=id;
+                                        dialog.add('魄虑：选择一个技能发动');
+                                        dialog.add('<div class="popup pointerdiv" style="width:80%;display:inline-block"><div class="skill">【乱武】</div><div>所有其他角色依次选择一项：1，对距离为1的角色使用一张【杀】；2，失去1点体力。</div></div>');
+                                        dialog.addText(' <br> ');
+                                        dialog.add('<div class="popup pointerdiv" style="width:80%;display:inline-block"><div class="skill">【七哀】</div><div>所有角色依次交给你一张牌</div></div>');
+                                        dialog.addText(' <br> ');
+                                        dialog.add('<div class="popup pointerdiv" style="width:80%;display:inline-block"><div class="skill">【败移】</div><div>你选择一名角色，和其交换未知。</div></div>');
+                                        dialog.addText(' <br> ');
+                                    }
+                                    func(event.videoId);
+                                    player.chooseControl(list);
+                                    'step 2'
+                                    game.broadcastAll('closeDialog',event.videoId);
+                                    if(result.control=='乱武'){
+                                        var next=game.createEvent('xy_polv_luanwu');
+                                        next.player=player;
+                                        next.setContent(lib.skill.luanwu.content);
+                                        player.$fullscreenpop('乱武','fire');
+                                        player.line(game.players);
+                                        //player.removeSkill('luanwu');
+                                        event.finish();
+                                    }
+                                    else if(result.control=='七哀'){
+                                        var next=game.createEvent('xy_polv_qiai');
+                                        next.player=player;
+                                        next.setContent(lib.skill.xinfu_qiai.content);
+                                        player.$fullscreenpop('七哀','water');
+                                        player.line(game.players);
+                                        //player.removeSkill('xinfu_qiai');
+                                        event.finish();
+                                    }
+                                    else{
+                                        event.goto(3);
+                                    }
+                                    'step 3'
+                                    player.chooseTarget(2,'交换两名角色的位置',true).set('ai',function(target){
+                                        if(player.hasUnknown()&&target!=player.next&&target!=player.previous) return 0;
+                                        var distance=Math.pow(get.distance(player,target,'absolute'),2);
+                                        if(!ui.selected.targets.length) return distance;
+                                        var distance2=Math.pow(get.distance(player,ui.selected.targets[0],'absolute'),2);
+                                        return Math.min(0,distance-distance2)
+                                    });
+                                    'step 4'
+                                    if(result.targets.length==2){
+                                        var next=game.createEvent('xy_polv_baiyi');
+                                        next.player=player;
+                                        next.targets=result.targets;
+                                        next.setContent(lib.skill.baiyi.content);
+                                        player.$fullscreenpop('败移','thunder');
+                                        player.line(result.targets);
+                                        //player.removeSkill('baiyi');
+                                        event.finish();
+                                    }
+                                    else event.goto(1);
+                                },
+                                group:'xy_polv_hpMark',
+                            },
+
+                            xy_polv_hpMark:{
+                                trigger:{
+                                    player:"phaseBegin",
+                                },
+                                log:false,
+                                forced:true,
+                                content:function(){
+                                    for(var i of game.players){
+                                        i.storage.hpMark=i.hp;
+                                    }
+                                },
+                                sub:true,
                             },
 
                             xy_jihong:{
@@ -186,7 +256,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     'step 0'
                                     if(!player.storage.jihong_target) player.storage.jihong_target=null;
                                     player.chooseTarget('对一名角色造成1点伤害',true).set('ai',function(target){
-                                        //if(get.attitude(player,target)&&target.hp>1&&target.hasSkillTag('maixue')) return
                                         if(get.attitude(player,target)){
                                             if(target.hp>1&&target.hasSkillTag('maixue')) return get.damageEffect(target,player,target);
                                             if(target.hp>1&&target.hp==target.maxHp) return 1;
@@ -1619,7 +1688,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     event.list=player.storage.yxsre_rentu;
                                     event.cardi=event.list[0].shift();
                                     event.sourcei=event.list[1].shift();
-                                    //event.sourcei.useCard(event.cardi,player,true);
                                     if(player.getExpansions('yxsre_rentu').contains(event.cardi)){
                                         if(event.sourcei&&event.sourcei.isIn()&&event.sourcei.canUse(event.cardi,player,false)) event.sourcei.useCard(event.cardi,player,false);
                                         else player.loseToDiscardpile(event.cardi);
@@ -1891,7 +1959,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     },
                                 },
                                 hiddenCard:function(player,name){
-                                    //if(name=='wuxie'&&_status.connectMode&&player.countCards('hs')>0) return true;
                                     if(name=='wuxie') return player.countCards('hes',function(card){return get.number(card)==7});
                                     if(name=='tao') return player.countCards('hes',function(card){return get.number(card)==3});
                                 },
@@ -2085,7 +2152,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         if(get.position(card)=='h'&&player.countCards('h')<player.maxHp) return false;
                                     }
                                 },
-                                //'yxsre_kongju_bigger','yxsre_kongju_smaller'
                                 group:['yxsre_kongju_bigger','yxsre_kongju_smaller'],
                                 subSkill:{
                                     bigger:{
@@ -2267,7 +2333,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     return true;
                                 },
                                 content:function(){
-                                    //player.showHandcards();
                                     player.draw();
                                 },
                                 ai:{
@@ -2448,9 +2513,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     }
                                     "step 3"
                                     if(event.cards&&event.cards.length){
-                                        //if(get.suit(event.cards[event.cards.length-1])==event.suit){
-                                        //    event.cards.pop().discard();
-                                        //}
                                         if(event.cards.length){
                                             player.gain(event.cards,'draw2');
                                         }
@@ -2483,11 +2545,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 trigger:{
                                     source:'damageEnd',
                                     global:'useCardAfter',
-                                    //source:'damageEnd',
                                 },
                                 direct:true,
                                 filter:function(event,player){
-                                    // TODO: check
                                     if(event.card) return get.type(event.card.viewAs||event.card.name)=='delay'&&event.player!=player&&event.player.countCards('he');
                                     else return event.player.countCards('he');
                                 },
@@ -2516,8 +2576,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     if(result.bool){
                                         var target=result.targets[0];
                                         player.logSkill('yxsre_tiewan');
-                                        //if(get.color(event.card)=='black') target.addJudge({name:'bingliang'},event.card);
-                                        //else target.addJudge({name:'lebu'},event.card);
                                         if(get.color(event.cards[0])=='black') player.useCard({name:'bingliang'},event.cards,target,true);
                                         else player.useCard({name:'lebu'},event.cards,target,true);
                                     }
@@ -2553,10 +2611,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         var gett=function(choice){
                                             if(choice=='cancel2') return 0.1;
                                             var max=0,func={
-                                                选项一:function(current){	//有人打得到你
+                                                选项一:function(current){	//TODO: 有人打得到你
                                                     max=2;
                                                 },
-                                                选项二:function(target){	//后面是否有敌人
+                                                选项二:function(target){	//TODO: 后面是否有敌人
                                                     max=1.5;
                                                 },
                                                 选项三:function(target){
@@ -2657,13 +2715,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_batu:{
                                 trigger:{global:'phaseAfter'},
                                 frequent:true,
-                                /*mod:{
-                                    cardUsable:function(card,player,num){
-                                        if(card.name=='sha') return num-1+game.countPlayer(function(current){
-                                            if(current.group=='qin') return 1;
-                                        });
-                                    },
-                                },*/
                                 group:'yxsre_batu_qin',
                                 filter:function(event,player){
                                     return player.countCards('h')<game.countGroup();
@@ -2763,14 +2814,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             /* 鸩杀,
-                             * 当有角色进入濒死状态时，你可以弃置一张【酒】或两张黑色牌
+                             * 当有其他角色进入濒死状态时，你可以弃置一张【酒】或两张黑色牌
                              * 然后该角色将体力回复至1，然后受到X+1点伤害，X为其以此法回复的体力值
                              */
                             yxsre_zhensha:{
                                 trigger:{global:'dying'},
                                 priority:9,
                                 filter:function(event,player){
-                                    // CHECK: 限制了不能毒自己，与描述不符
                                     return event.player.hp<=0&&(player.countCards('h','jiu')>0||player.countCards('he',{color:'black'})>=2)&&player!=event.player;
                                 },
                                 direct:true,
@@ -2780,8 +2830,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 content:function(){
                                     'step 0'
                                     var goon=(get.attitude(player,trigger.player)<0);
-                                    // 错误：描述不符，1. 现在是两张黑色牌，2. 现在是回复体力至1
-                                    var next=player.chooseToDiscard('鸠杀：是否弃置一张【酒】或两张黑色手牌令'+get.translation(trigger.player)+'立即死亡？','he');
+                                    event.numx=1-trigger.player.hp;
+                                    var next=player.chooseToDiscard('鸠杀：是否弃置一张【酒】或两张黑色手牌令'+get.translation(trigger.player)+'回复体力至1，然后受到'+get.cnNumber(event.numx)+'点伤害？','he');
                                     next.ai=function(card){
                                         if(ui.selected.cards.length){
                                             if(ui.selected.cards[0].name=='jiu') return 0;
@@ -2792,7 +2842,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         }
                                         return 0;
                                     };
-                                    // Q: 这部分完全看不懂捏
+                                    // Q: 这部分完全看不懂捏     A：检测选牌时，牌的合法性，ui.selected.cards是已经选中的牌的列表
                                     next.filterCard=function(card){
                                         if(ui.selected.cards.length){
                                             return get.color(card)=='black';
@@ -2811,10 +2861,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     if(result.bool){
                                         //if(trigger.getParent().source) trigger.getParent().source=player;
                                         //trigger.player.die();
-                                        // TODO: 请测试，卖血将应该可以插入发动技能
-                                        var num=1-trigger.player.hp;
-                                        trigger.player.recover(num);
-                                        trigger.player.damage(num+1);
+                                        // TODO: 请测试，卖血将应该可以插入发动技能   A：对
+                                        trigger.player.recover(event.numx);
+                                        trigger.player.damage(event.numx+1);
                                     }
                                     else{
                                         event.finish();
@@ -2847,7 +2896,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     var num=game.countPlayer(function(current){
                                         return !current.isDamaged();
                                     });
-                                    // CHECK: 这里感觉可以不分开写
+                                    // CHECK: 这里感觉可以不分开写    //前面的是触发条件，这里是生成文本提示，最后面才是技能本体
                                     if(num<3){
                                         return '蓄谋：是否摸'+get.cnNumber(num)+'张牌？';
                                     }
@@ -2959,12 +3008,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             var num=2;
                                             var id=trigger.target.playerid;
                                             var map=trigger.getParent().customArgs;
-                                            //var targets=trigger.targets;
                                             if(!map[id]) map[id]={};
                                             switch(event.index){
                                                 case 0:
                                                     player.draw(2);
-                                                    trigger.getParent().excluded.push(trigger.target);		//TODO: 
+                                                    trigger.getParent().excluded.push(trigger.target);
                                                     break;
                                                 case 1:
                                                     player.draw(1);
@@ -3078,12 +3126,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             if(!map[idt]) map[idt]={};
                                             if(!map[idt].shaReq) map[idt].shaReq={};
                                             if(!map[idt].shaReq[id]) map[idt].shaReq[id]=1;
-                                            //var targets=trigger.targets;
                                             if(!map[id]) map[id]={};
                                             switch(event.index){
                                                 case 0:
                                                     player.draw(2);
-                                                    trigger.getParent().excluded.push(trigger.target);		//TODO: 
+                                                    trigger.getParent().excluded.push(trigger.target);
                                                     break;
                                                 case 1:
                                                     player.draw(1);
@@ -3130,8 +3177,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     'step 1'
                                     if(result.bool){
                                         event.target=result.targets[0];
-                                        // 错误：限制了必须给牌
-                                        // 你是不是觉得写起来很麻烦，就不让给0张，哈哈哈哈哈
+                                        // 你是不是觉得写起来很麻烦，就不让给0张，哈哈哈哈哈  A：选择给牌的时候可以点取消就无事发生
                                         player.chooseCard([1, Infinity], 'he', '选择任意张牌交给' + get.translation(event.target), function (card) {
                                             return true;
                                         }).set('ai', function (card) {
@@ -3221,7 +3267,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             target.addSkillLog('yxsre_wushuang_modi');
                                         }
                                         else target.addSkillLog('wushuang');
-                                        //target.addSkillLog('wushuang');
                                         player.die();
                                     }
                                 },
@@ -3230,7 +3275,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             
                             /* 霸王,
                              * 反贼技 锁定技
-                             * 主公的出牌阶段开始时，若你的手牌数少于你的体力值，则每少一张主公须交给你一张牌，否则受到1点伤害。
+                             * 主公的出牌阶段开始时，若你的手牌数少于你的体力上限，则每少一张主公须交给你一张牌，否则受到1点伤害。
                              * 当你杀死主公时，你与其交换身份，然后你增加1点体力上限和体力，最后将手牌摸至体力上限。
                              */
                             yxsre_bawang:{
@@ -3244,9 +3289,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 unique:true,
                                 forced:true,
                                 filter:function(event,player){
-                                    // Q: 反贼技怎么把内带上了？
-                                    // Q: 为什么至少有一名敌人？
-                                    return (player.identity=='fan'||player.identity=='nei')&&event.player.identity=='zhu'&&event.player.getEnemies().length>1;
+                                    // Q: 为什么至少有一名敌人？   A：没有敌人游戏就结束了，否则会在已经胜利的情况下继续游戏，直到有人死亡（测试结果），是否有update游戏胜利状况的还不知道
+                                    return (player.identity=='fan')&&event.player.identity=='zhu'&&event.player.getEnemies().length>1;
                                 },
                                 content:function(event){
                                     game.broadcastAll(function(player,target){
@@ -3271,16 +3315,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         },
                                         forced:true,
                                         filter:function(event,player){
-                                            // 错误：用体力上限和手牌数相减，与描述不符
                                             return event.player==game.zhu&&event.player.isZhu&&player.identity=='fan'&&player.maxHp-player.countCards('h')>0;
                                         },
                                         content:function(){
                                             'step 0'
                                             event.number=player.maxHp-player.countCards('h');
-                                            // 貌似不用判断 < 0,
-                                            if(event.number<0) event.number=0;
+                                            //if(event.number<0) event.number=0;
                                             if(event.number){
-                                                // Q: 这个player是主公还是项羽
+                                                // Q: 这个player是主公还是项羽  A:trigger.player 指当前时机的 player，技能出发时机是主公的出牌阶段开始时，所以是主公
                                                 trigger.player.chooseCard([1,event.number], 'he', '选择至多'+get.cnNumber(event.number)+'张牌交给项羽', function (card) {
                                                     return true;
                                                 }).set('ai', function (card) {
@@ -3294,7 +3336,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             if(result.bool){
                                                 event.cards=result.cards;
                                                 player.gain(event.cards,trigger.player,'giveAuto');
-                                                // Q: 能否超出限制给牌导致damage造成负数伤害
+                                                // Q: 能否超出限制给牌导致damage造成负数伤害     A：可以
                                                 trigger.player.damage(event.number-event.cards.length);
                                             }
                                             else{
@@ -3434,7 +3476,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_hufu:'胡服',
                             yxsre_hufu_info:'锁定技，若你的装备区内没有防具牌时，摸牌阶段你多摸一张牌；当你装备区内有防具牌时，你的手牌上限+3',
                             yxsre_hanbei:'捍北',
-                            yxsre_hanbei_info:'锁定技，若你的装备区有坐骑牌时，你的【杀】不可被【闪】抵消',
+                            yxsre_hanbei_info:'锁定技，你的装备区有坐骑牌时，你的【杀】不可被【闪】抵消',
                             yxsre_qiangyun:'强运',
 			                yxsre_qiangyun_info:'当你失去最后一张手牌，可摸2*(X+1)张牌，X为你已发动此技能的次数。然后若你的手牌数大于存活角色数的两倍，你将X归零',
                             yxsre_zhitui:'智退',
@@ -3472,7 +3514,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_yuyu:'御宇',
                             yxsre_yuyu_info:'主公技。当你杀死一名非忠臣角色时，你可以减一点体力上限，将其身份改为忠臣，势力改为“秦”，然后其失去所有技能，将体力上限改为4，体力值回复至2，弃置所有牌，最后摸两张牌。',
                             yxsre_zhensha:'鸩杀',
-                            yxsre_zhensha_info:'当有角色进入濒死状态时，你可以弃置一张【酒】或两张黑色牌，然后该角色将体力回复至1，然后受到X+1点伤害，X为其以此法回复的体力值。',
+                            yxsre_zhensha_info:'当有其他角色进入濒死状态时，你可以弃置一张【酒】或两张黑色牌，然后该角色将体力回复至1，然后受到X+1点伤害，X为其以此法回复的体力值。',
                             yxsre_xumou:'蓄谋',
                             yxsre_xumou_info:'结束阶段，你可以摸X张牌，X为场上体力值等于体力上限的角色数，然后若X不小于3，你翻面。',
                             yxsre_chuyao:'楚腰',
@@ -3482,14 +3524,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_wushuang_modi:'无双·修改',
                             yxsre_wushuang_modi_info:'锁定技。当你使用【杀】/【决斗】指定目标后（或成为【决斗】的目标后），你须选择一项：1，摸两张牌，然后此牌无效；2，摸一张牌；3，令此牌需要响应的【闪】/【杀】数量+1，4，弃置一张牌，令此牌需要响应的【闪】/【杀】数量+2。',
                             yxsre_bawang:'霸王',
-                            yxsre_bawang_info:'反贼技。锁定技。主公的出牌阶段开始时，若你的手牌数少于你的体力值，则每少一张主公须交给你一张牌，否则受到1点伤害。当你杀死主公时，你与其交换身份，然后你增加1点体力上限和体力，最后将手牌摸至体力上限。',
+                            yxsre_bawang_info:'反贼技。锁定技。主公的出牌阶段开始时，若你的手牌数少于你的体力上限，则每少一张主公须交给你一张牌，否则受到1点伤害。当你杀死主公时，你与其交换身份，然后你增加1点体力上限和体力，最后将手牌摸至体力上限。',
                             yxsre_zhunwu:'衠舞',
 			                yxsre_zhunwu_info:'出牌阶段开始时，你可以展示所有手牌，若其中的牌的类型数不小于：1，你可以选择一名男性角色，你与其各摸一张牌；2，你获得“离间”直到此阶段结束；3，你获得“离魂”直到此阶段结束。',
 
                             //xinyu
                             xy_polv:'魄虑',
+                            xy_polv_info:'觉醒技。结束阶段，若有角色的体力值大于其在你的回合开始时的体力值，你减1点体力上限，然后获得“行殇”，最后，你从“乱武”、“七哀”和“败移”三个技能中选择一个技能立即发动。',
                             xy_jihong:'羁鸿',
+                            xy_jihong:'你的出牌阶段开始时，你可以对一名角色造成1点伤害，然后此回合的结束阶段开始时，其回复X点体力，X为此回合出牌阶段你对其造成的伤害数。',
                             xy_rongyang:'荣飏',
+                            xy_rongyang_info:'当有角色体力值或体力上限变化后，若其体力值等于其体力上限，你可以摸一张牌。',
                             xy_fuyuan:'负怨',
                             xy_fuyuan_info:'当你受到伤害后，你可以展示一张手牌，然后展示伤害来源所有手牌，弃置其手牌和装备区内所有与你所展示牌花色相同的牌。',
                             xy_shujin:'淑矜',

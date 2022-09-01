@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 31/08/2022 01:32:27
+ * Last Modified: 1/09/2022 09:55:48
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -368,6 +368,26 @@ window.yxsre_import(function(lib,game,ui,get,ai,_status){
                     },
                     'die':{
                         content:'可恶，姐支持的球队怎么会输。',
+                    }
+                }
+            },
+
+            'xy_yangrundi_dynamic':{
+                level:"史诗",
+                translation:"动态",
+                info:"",
+                order:1,//显示顺序，号越小越前面。
+                skill:{
+                    'xy_jihong':{
+                        order:1,
+                    },
+                    'xy_rongyang':{
+                        order:2,
+                    },
+                    'xy_polv':{
+                        order:3,
+                    },
+                    'die':{
                     }
                 }
             },
