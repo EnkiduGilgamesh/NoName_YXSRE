@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 1/09/2022 01:46:22
+ * Last Modified: 1/09/2022 10:50:21
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -80,7 +80,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 			};
 
             //配音
-            lib.skill.wushuang.audioname.push("yxsre_xiangyu");
         },
         
         precontent:function(yxsre){
@@ -129,7 +128,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_aijiyanhou:['female','western',3,['yxsre_seyou','yxsre_sheshi'],[]],
                             yxsre_yingzheng:['male','daqin',4,['yxsre_batu','yxsre_yuyu'],['zhu']],
                             yxsre_lvzhi:['female','han',3,['yxsre_zhensha','xumou'],[]],
-                            yxsre_xiangyu:['male','chu',4,['wushuang','yxsre_bawang'],[]],
+                            yxsre_xiangyu:['male','chu',4,['yxsre_wushuang_modi','yxsre_bawang'],[]],
                             yxsre_yuji:['female','chu',3,['yxsre_chuyao','yxsre_bieji'],[]],
                             yxsre_diaochan:['female','han',3,['yxs_zhunwu','biyue'],[]],
                             yxsre_mingchenghuanghou:['female','western',3,['yxsre_tiewan','yxsre_juecha'],[]],
@@ -585,8 +584,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             },
                                             backup:function(links,player){
                                                 return {
-                                                    //audio:'paiyi',
-                                                    //audioname:['re_zhonghui'],
                                                     filterTarget:function(card,player,target){
                                                         return target!=player;
                                                     },
@@ -619,7 +616,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         contentx:function(){
                                             "step 0"
                                             var card=lib.skill.yxsre_weihuan_damage_backup.card;
-                                            //player.logSkill('yxsre_weihuan',target);
                                             player.loseToDiscardpile(card);
                                             if(!player.storage.yxsre_weihuan_type) player.storage.yxsre_weihuan_type=[];
                                             player.storage.yxsre_weihuan_type.add(get.type2(card));
@@ -649,7 +645,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         forced:true,
                                         popup:false,
                                         filter:function(event,player){
-                                            //return event.player.isAlive()&&event.reason&&event.reason.getParent().name=='yxsre_weihuan_damage_backup';
                                             return event.player.isAlive()&&event.getParent().name=='yxsre_weihuan_damage_backup';
                                         },
                                         content:function(){
@@ -664,7 +659,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         forced:true,
                                         popup:false,
                                         filter:function(event,player){
-                                            //return !event.player.isAlive()&&event.reason&&event.reason.getParent().name=='yxsre_weihuan';
                                             return !event.player.isAlive()&&event.getParent().name=='yxsre_weihuan_damage_backup';
                                         },
                                         content:function(){
@@ -673,7 +667,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             player.recover();
                                             'step 1'
                                             player.draw(player.maxHp);
-                                            //player.removeSkill('yxsre_weihuan2');
                                         },
                                     }
                                 }
@@ -776,7 +769,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 filter:function(event,player){
                                     if(event.xy_shujin) return false;
                                     if(event.filterCard({name:'wuxie',isCard:true},player,event)) return true;
-                                    //if(event.name!='chooseToUse') return false;
                                     return false;
                                 },
                                 delay:false,
@@ -840,7 +832,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                                 content:function(){
                                     'step 0'
-                                    //player.discardPlayerCard(player,'e',true);
                                     player.discardPlayerCard(target,'e',true);
                                     'step 1'
                                     game.asyncDraw([player,target]);
@@ -865,7 +856,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 }
                             },
 
-                            yxsre_shengong:{
+                            yxsre_shengong:{                                        //TODO: ai rewrite
                                 enable:'phaseUse',
                                 usable:5,
                                 filterTarget:function(card,player,target){
@@ -1625,6 +1616,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 
 
                             yxsre_rentu:{
+                                marktext:'屠',
                                 prompt:"令此牌对其无效并置于其武将牌上，然后弃置其一张牌。",
                                 trigger:{
                                     player:"useCardToPlayered",
@@ -1634,7 +1626,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         if(!storage) return 0;
                                         return storage[0].length;
                                     },
-                                    marktext:'屠',
                                     mark:function(dialog,storage,player){
                                         if(!storage) return;
                                         dialog.addAuto(storage[0]);
@@ -2045,7 +2036,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 
                             yxsre_zhitui:{
                                 trigger:{
-                                    player:"phaseZhuibeiBegin",
+                                    player:"phaseZhunbeiBegin",
                                 },
                                 dutySkill:true,
                                 forced:true,
@@ -2053,11 +2044,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     return player.hasUseTarget('wugu');
                                 },
                                 content:function(){
-                                    var list = game.filterPlayer(function (current) {
-                                        return player.canUse('wugu', current);
+                                    player.draw();
+                                    var list=game.filterPlayer(function(current){
+                                        return player.canUse('wugu',current);
                                     }).sortBySeat();
-                                    if (list.length) {
-                                        player.useCard({name:'wugu'}, list);
+                                    if(list.length){
+                                        player.useCard({name:'wugu',isCard:true}, list);
                                     };
                                 },
                                 group:['yxsre_zhitui_achieve','yxsre_zhitui_fail'],
@@ -2111,7 +2103,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     },
                                 },
                                 derivation:"yxsre_yaoxing",
-
                             },
 
                             yxsre_yaoxing:{
@@ -2261,6 +2252,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         }
                                     },
                                 },
+                            },
+
+                            yxsre_keji:{
+                                inherit:'keji',
+                                audio:"ext:英雄杀RE/audio:2",
                             },
 
                             yxsre_tuqiang:{
@@ -2548,8 +2544,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                                 direct:true,
                                 filter:function(event,player){
-                                    if(event.card) return get.type(event.card.viewAs||event.card.name)=='delay'&&event.player!=player&&event.player.countCards('he');
-                                    else return event.player.countCards('he');
+                                    if(event.source==player&&event.player.countCards('he')) return true;
+                                    if(get.type(event.card.viewAs||event.card.name)=='delay'&&event.player!=player&&event.player.countCards('he')) return true;
+                                    return false;
                                 },
                                 content:function(){
                                     'step 0'
@@ -2921,6 +2918,26 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     },
                                 },
                             },
+
+                            yxsre_wushuang:{
+                                audio:"ext:英雄杀RE/audio:2",
+                                shaRelated:true,
+                                forced:true,
+                                locked:true,
+                                group:["yxsre_wushuang1","yxsre_wushuang2"],
+                                preHidden:["yxsre_wushuang1","yxsre_wushuang2"],
+                            },
+
+                            yxsre_wushuang1:{
+                                inherit:'wushuang1',
+                                //audio:'yxsre_wushuang',
+                                audio:'yxsre_wushuang',
+                            },
+                            yxsre_wushuang2:{
+                                inherit:'wushuang2',
+                                //audio:'',
+                                audio:'yxsre_wushuang',
+                            },
                 
                             yxsre_wushuang_modi:{				//TODO: AI rewrite
                                 shaRelated:true,
@@ -2928,10 +2945,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 audioname:["yxsre_xiangyu"],
                                 forced:true,
                                 locked:true,
-                                group:["yxsre_wushuang_modi_1","yxsre_wushuang_modi_2"],
-                                preHidden:["yxsre_wushuang_modi_1","yxsre_wushuang_modi_2"],
+                                group:["yxsre_wushuang_modi_sha","yxsre_wushuang_modi_juedou"],
+                                preHidden:["yxsre_wushuang_modi_sha","yxsre_wushuang_modi_juedou"],
                                 subSkill:{
-                                    1:{
+                                    sha:{
+                                        audio:"yxsre_wushuang_modi",
                                         trigger:{
                                             player:"useCardToPlayered",
                                         },
@@ -3043,7 +3061,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         },
                                         sub:true,
                                     },
-                                    2:{
+                                    juedou:{
+                                        audio:"yxsre_wushuang_modi",
                                         trigger:{
                                             player:"useCardToPlayered",
                                             target:"useCardToTargeted",
@@ -3067,7 +3086,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             for(var i=0; i<4; i++){
                                                 list.push('选项'+get.cnNumber(i+1,true));
                                             }
-                                            player.chooseControl(list).set('prompt',get.prompt('yxsre_wushuang_modi_1')).set('choiceList',choiceList).set('ai',function(){
+                                            player.chooseControl(list).set('prompt',get.prompt('yxsre_wushuang_modi_sha')).set('choiceList',choiceList).set('ai',function(){
                                                 var player=_status.event.player;
                                                 var list=_status.event.controls.slice(0);
                                                 var gett=function(choice){
@@ -3163,6 +3182,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                              * 4，你回复1点体力
                              */
                             yxsre_chuyao:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 trigger:{player:"damageEnd"},
                                 filter:function(event,player){
                                     return player.countCards('he');
@@ -3262,8 +3282,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         }
                                         player.$give(cards,target);
                                         target.gain(cards);
-                                        if(target.hasSkill('wuhsuang')){
+                                        if(target.hasSkill('wuhsuang')||target.hasSkill('yxsre_wuhsuang')){
                                             target.removeSkill('wushuang');
+                                            target.removeSkill('yxsre_wushuang');
                                             target.addSkillLog('yxsre_wushuang_modi');
                                         }
                                         else target.addSkillLog('wushuang');
@@ -3279,6 +3300,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                              * 当你杀死主公时，你与其交换身份，然后你增加1点体力上限和体力，最后将手牌摸至体力上限。
                              */
                             yxsre_bawang:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 group:'yxsre_bawang_general',
                                 mode:["identity"],
                                 trigger:{
@@ -3348,6 +3370,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 }
                             },
 
+                            yxsre_biyue:{
+                                inherit:'biyue',
+                                audio:"ext:英雄杀RE/audio:2",
+                            },
+
                             /* 衠舞,
 			                 * 出牌阶段开始时，你可以展示所有手牌，若其中的牌的类型数不小于：
                              * 1，你可以选择一名男性角色，你与其各摸一张牌
@@ -3355,6 +3382,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                              * 3，你获得“离魂”直到此阶段结束
                              */
                             yxsre_zhunwu:{
+                                audio: "ext:英雄杀RE/audio:2",
                                 trigger:{player:'phaseUseBegin'},
                                 filter:function(event,player){
                                     return player.countCards('h')>0;
@@ -3491,6 +3519,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_kongju_info:'若你的手牌数小于：你的体力上限，防止你的手牌被弃置或被其他角色获得；你的体力值，摸牌阶段，你多摸一张牌；若你的手牌数大于：你的体力上限，你不会成为【乐不思蜀】目标；你的体力值，出牌阶段限一次，你可以重铸一张牌。',
                             yxsre_shentan:'神探',
 			                yxsre_shentan_info:'出牌阶段限一次，你可以弃置一张牌，获得距离2以内的一名角色的一张手牌，然后可以将其交给另一名角色',
+                            yxsre_keji:'克己',
+                            yxsre_keji_info:'弃牌阶段开始时，若你未在此回合出牌阶段内使用或打出过【杀】，你可以跳过弃牌阶段。',
                             yxsre_tuqiang:'图强',
 			                yxsre_tuqiang_info:'当你使用或打出一张点数不小于10的牌时，你可以摸两张牌。',
                             yxsre_wudang:'武当',
@@ -3523,8 +3553,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_bieji_info:'当你进入濒死状态时，或出牌阶段结束时，你可以将区域内所有牌交给一名男性角色，若你的体力上限大于其，其增加体力上限至你的体力上限，并回复等量体力，然后获得“无双”，若其已拥有“无双”，则修改“无双”，最后你死亡。',
                             yxsre_wushuang_modi:'无双·修改',
                             yxsre_wushuang_modi_info:'锁定技。当你使用【杀】/【决斗】指定目标后（或成为【决斗】的目标后），你须选择一项：1，摸两张牌，然后此牌无效；2，摸一张牌；3，令此牌需要响应的【闪】/【杀】数量+1，4，弃置一张牌，令此牌需要响应的【闪】/【杀】数量+2。',
+                            yxsre_wushaung:'无双',
+                            yxsre_wushuang_info:'锁定技，当你使用【杀】或【决斗】指定目标后，你令此牌需要依次使用或打出两张【闪】或【杀】响应。',
                             yxsre_bawang:'霸王',
                             yxsre_bawang_info:'反贼技。锁定技。主公的出牌阶段开始时，若你的手牌数少于你的体力上限，则每少一张主公须交给你一张牌，否则受到1点伤害。当你杀死主公时，你与其交换身份，然后你增加1点体力上限和体力，最后将手牌摸至体力上限。',
+                            yxsre_biyue:'闭月',
+                            yxsre_biyue_info:'结束阶段，你可以摸一张牌。',
                             yxsre_zhunwu:'衠舞',
 			                yxsre_zhunwu_info:'出牌阶段开始时，你可以展示所有手牌，若其中的牌的类型数不小于：1，你可以选择一名男性角色，你与其各摸一张牌；2，你获得“离间”直到此阶段结束；3，你获得“离魂”直到此阶段结束。',
 
@@ -3532,7 +3566,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_polv:'魄虑',
                             xy_polv_info:'觉醒技。结束阶段，若有角色的体力值大于其在你的回合开始时的体力值，你减1点体力上限，然后获得“行殇”，最后，你从“乱武”、“七哀”和“败移”三个技能中选择一个技能立即发动。',
                             xy_jihong:'羁鸿',
-                            xy_jihong:'你的出牌阶段开始时，你可以对一名角色造成1点伤害，然后此回合的结束阶段开始时，其回复X点体力，X为此回合出牌阶段你对其造成的伤害数。',
+                            xy_jihong_info:'出牌阶段开始时，你可以对一名角色造成1点伤害，然后此回合的结束阶段开始时，其回复X点体力，X为此回合出牌阶段你对其造成的伤害数。',
                             xy_rongyang:'荣飏',
                             xy_rongyang_info:'当有角色体力值或体力上限变化后，若其体力值等于其体力上限，你可以摸一张牌。',
                             xy_fuyuan:'负怨',
