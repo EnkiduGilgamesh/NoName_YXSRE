@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 1/09/2022 10:50:21
+ * Last Modified: 2/09/2022 08:27:44
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -104,7 +104,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 
                                 yxsre_shijie:["yxsre_mingchenghuanghou","yxsre_aijiyanhou"],
                                 xy_jinxiandai:["xy_denglijun"],
-                                xy_jinzhao:["xy_linzhen","xy_yaosongwei","xy_huangyang","xy_qiusidan","xy_yangrundi"],
+                                xy_jinzhao:["xy_linzhen","xy_yaosongwei","xy_huangyang","xy_qiusidan","xy_yangrundi",'xy_yanguoming'],
                                 yxsre_undo:[],
                             },
                         },
@@ -133,6 +133,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_diaochan:['female','han',3,['yxs_zhunwu','biyue'],[]],
                             yxsre_mingchenghuanghou:['female','western',3,['yxsre_tiewan','yxsre_juecha'],[]],
                             //xinyu
+                            xy_yanguoming:['male','xin',4,['xy_qinkuang'],[]],
                             xy_yangrundi:['male','xin',4,['xy_jihong','xy_rongyang','xy_polv'],[]],
                             xy_qiusidan:['female','xin',3,['xy_shujin','xy_fuyuan'],[]],
                             xy_denglijun:['female','xin',3,['xy_miaoyin','xy_youyang'],[]],
@@ -142,6 +143,62 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         },
 
                         skill:{
+                            xy_qinkuang:{
+                                trigger:{
+                                    player:"useCard2",
+                                },
+                                frequent:true,
+                                preHidden:true,
+                                filter:function(event,player){
+                                    return get.translation(event.card)&&event.card.isCard;
+                                },
+                                content:function(){
+                                    'step 0'
+                                    game.log(get.translation(trigger.card).split(/[·【]/)[0].length);
+                                    if(get.translation(trigger.card).split(/[·【]/)[0].length>player.hp){
+                                        player.draw();
+                                        //player.logSkill('xy_qinkuang');
+                                    }
+                                    if(get.translation(trigger.card).split(/[·【]/)[0].length==player.hp){
+                                        var goon=false;
+                                        var info=get.info(trigger.card);
+                                        if((get.type(trigger.card)=='basic'||get.type(trigger.card)=='trick')&&trigger.targets&&!info.multitarget){
+                                            var players=game.filterPlayer();
+                                            for(var i=0;i<players.length;i++){
+                                                if(lib.filter.targetEnabled2(trigger.card,player,players[i])&&!trigger.targets.contains(players[i])){
+                                                    goon=true;break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if(goon){
+                                        player.chooseTarget('钦狂：是否多指定一名'+get.translation(trigger.card)+'的目标？',function(card,player,target){
+                                            var trigger=_status.event;
+                                            if(trigger.targets.contains(target)) return false;
+                                            return lib.filter.targetEnabled2(trigger.card,_status.event.player,target);
+                                        }).set('ai',function(target){
+                                            var trigger=_status.event.getTrigger();
+                                            var player=_status.event.player;
+                                            return get.effect(target,trigger.card,player,player);
+                                        }).set('targets',trigger.targets).set('card',trigger.card);
+                                    }
+                                    'step 1'
+                                    if(result.bool){
+                                        if(!event.isMine()) game.delayx();
+                                        event.target=result.targets[0];
+                                    }
+                                    else{
+                                        event.finish();
+                                    }
+                                    'step 2'
+                                    if(event.target){
+                                        player.logSkill('xy_qinkuang',event.target);
+                                        trigger.targets.add(event.target);
+                                    }
+                                    event.finish();
+                                },
+                            },
+
                             xy_polv:{
                                 trigger:{
                                     player:"phaseEnd",
@@ -152,12 +209,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 unique:true,
                                 derivation:['xingshang','luanwu','xinfu_qiai','baiyi'],
                                 filter:function(event,player){
-                                    /*return game.countPlayer(function(current){
+                                    return game.countPlayer(function(current){
                                         if(!current.storage.hpMark) return false;
                                         if(current.hp>current.storage.hpMark) return true;
                                         return false;
-                                    });*/
-                                    return true;
+                                    });
                                 },
                                 content:function(){
                                     'step 0'
@@ -178,7 +234,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         dialog.addText(' <br> ');
                                         dialog.add('<div class="popup pointerdiv" style="width:80%;display:inline-block"><div class="skill">【七哀】</div><div>所有角色依次交给你一张牌</div></div>');
                                         dialog.addText(' <br> ');
-                                        dialog.add('<div class="popup pointerdiv" style="width:80%;display:inline-block"><div class="skill">【败移】</div><div>你选择一名角色，和其交换未知。</div></div>');
+                                        dialog.add('<div class="popup pointerdiv" style="width:80%;display:inline-block"><div class="skill">【败移】</div><div>你选择两名角色，交换他们的座次。</div></div>');
                                         dialog.addText(' <br> ');
                                     }
                                     func(event.videoId);
@@ -1055,6 +1111,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     'step 1'
                                     if(result.bool){
                                         result.targets[0].draw(event.numx);
+                                        player.logSkill('xy_danmei',result.targets[0]);
                                     }
                                 },
                             },
@@ -2260,6 +2317,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_tuqiang:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 trigger:{player:['respond','useCard']},
                                 filter:function(event,player){
                                     return event.card&&get.number(event.card)>=10;
@@ -2281,6 +2339,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_wudang:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 usable:1,
                                 trigger:{player:'damageEnd'},
                                 filter:function(event,player){
@@ -2319,6 +2378,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_taiji:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 enable:"phaseUse",
                                 filter:function(event,player){
                                     var num_red=player.countCards('h',{color:'red'});
@@ -2337,6 +2397,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_wumu:{
+                                shaRelated:true,
+                                //audio:"ext:英雄杀RE/audio:3",
                                 trigger:{player:['useCard']},
                                 filter:function(event,player){
                                     return event.card.name=='sha'&&get.color(event.card)=='red';
@@ -2350,6 +2412,18 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 group:['yxsre_wumu_pass','yxsre_wumu_black','yxsre_wumu_red'],
                                 subSkill:{
                                     pass:{
+                                        audio:'yxsre_wumu',
+                                        trigger:{
+                                            player:"useCard1",
+                                        },
+                                        firstDo:true,
+                                        forced:true,
+                                        filter:function(event,player){
+                                            return !event.audioed&&event.card.name=='sha'&&player.countUsed('sha',true)>1&&event.getParent().type=='phase';
+                                        },
+                                        content:function(){
+                                            trigger.audioed=true;
+                                        },
                                         mod:{
                                             targetInRange:function(card,player){
                                                 if(card.name=='sha'&&get.color(card)=='black') return true;
@@ -2358,9 +2432,18 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                                 if(card.name=='sha'&&get.color(card)=='red') return Infinity;
                                             },
                                             sub:true,
-                                        }
+                                        },
+                                        ai:{
+                                            unequip:true,
+                                            skillTagFilter:function(player,tag,arg){
+                                                if(!get.zhu(player,'shouyue')) return false;
+                                                if(arg&&arg.name=='sha'&&get.color(arg)=='red') return true;
+                                                return false;
+                                            },
+                                        },
                                     },
                                     black:{
+                                        //audio:'yxsre_wumu',
                                         trigger:{
                                             source:"damageBegin",
                                         },
@@ -2374,6 +2457,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         sub:true,
                                     },
                                     red:{
+                                        //audio:'yxsre_wumu',
                                         trigger:{
                                             player:"shaBegin",
                                         },
@@ -2465,8 +2549,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 direct:true,
                                 content:function(){
                                     "step 0"
-                                    if(this.trigger.num) event.count=trigger.num;
-                                    else event.count=1;
+                                    event.count=trigger.num;
                                     "step 1"
                                     event.count--;
                                     if(event.isMine()){
@@ -2515,6 +2598,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     }
                                     "step 4"
                                     if(event.count) event.goto(1);
+                                    else event.finish();
                                 },
                                 ai:{
                                     maixie:true,
@@ -2710,6 +2794,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                              * “秦”势力角色回合开始前，你可以弃置至多两张牌，然后其摸等量的牌。
                              */
                             yxsre_batu:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 trigger:{global:'phaseAfter'},
                                 frequent:true,
                                 group:'yxsre_batu_qin',
@@ -2760,6 +2845,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                              * 然后其失去所有技能，将体力上限改为4，体力值回复至2，弃置所有牌，最后摸两张牌
                              */
                             yxsre_yuyu:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 mode:["identity"],
                                 trigger:{
                                     source:"dieBegin",
@@ -2815,6 +2901,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                              * 然后该角色将体力回复至1，然后受到X+1点伤害，X为其以此法回复的体力值
                              */
                             yxsre_zhensha:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 trigger:{global:'dying'},
                                 priority:9,
                                 filter:function(event,player){
@@ -2880,6 +2967,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                              * 然后若X不小于3，你翻面
                              */
                             yxsre_xumou:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 // CHECK: 重复数了三次有多少人受伤
                                 trigger:{
                                     player:"phaseJieshuBegin",
@@ -3456,6 +3544,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_mingchenghuanghou:'明成皇后',
 
                             //xinyu
+                            xy_yanguoming:'严国铭',
                             xy_yangrundi:'杨润地',
                             xy_qiusidan:'仇思丹',
                             xy_denglijun:'邓丽君',
@@ -3532,7 +3621,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_sheshi:'蛇噬',
 			                yxsre_sheshi_info:'当你受到1点伤害后，你可以选择一种花色，你依次展示牌堆顶的牌，直到出现选择花色的牌为止，你获得所有展示的牌（最多展示4张牌）。',
                             yxsre_seyou:'色诱',
-			                yxsre_seyou_info:'限定技，出牌阶段，你可以指定任意一名角色，所有其他男性角色需选择一项执行：1，对你指定的角色出【杀】；1，你获得其一张牌。',
+			                yxsre_seyou_info:'限定技，出牌阶段，你可以指定任意一名角色，所有其他男性角色需选择一项执行：1，对你指定的角色使用一张【杀】；1，你获得其一张牌。',
                             yxsre_juecha:'觉察',
                             yxsre_juecha_info:'‌当你受到伤害后，你可以选择本轮次未选择的一项直到下一轮开始，1，【杀】对你无效；2，通常锦囊牌对你无效；3，摸X张牌，X为你本轮已选择的项数。',
                             yxsre_juecha_sha:'觉察',
@@ -3563,6 +3652,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 			                yxsre_zhunwu_info:'出牌阶段开始时，你可以展示所有手牌，若其中的牌的类型数不小于：1，你可以选择一名男性角色，你与其各摸一张牌；2，你获得“离间”直到此阶段结束；3，你获得“离魂”直到此阶段结束。',
 
                             //xinyu
+                            xy_qinkuang:'钦狂',
+                            xy_qinkuang_info:'当你使用牌名字数：大于体力值的牌时，你可以摸一张牌；等于体力值的牌时，你可以多选择一个合法目标。',
                             xy_polv:'魄虑',
                             xy_polv_info:'觉醒技。结束阶段，若有角色的体力值大于其在你的回合开始时的体力值，你减1点体力上限，然后获得“行殇”，最后，你从“乱武”、“七哀”和“败移”三个技能中选择一个技能立即发动。',
                             xy_jihong:'羁鸿',
