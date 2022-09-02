@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 2/09/2022 08:27:44
+ * Last Modified: 2/09/2022 11:22:49
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -110,28 +110,28 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         },
 
                         character:{
-                            yxsre_chensheng:['male','qun',4,['yxsre_zhanlv','yxsre_chuxing'],[]],
-                            yxsre_yangguang:['male','shen',4,['yxsre_weihuan'],[]],
-                            yxsre_luban:['male','shen',3,['yxsre_guifu','yxsre_shengong'],[]],
-                            yxsre_sunwu:['male','shen',3,['yxsre_bingsheng','yxsre_taolue'],[]],
+                            yxsre_chensheng:['male','qun',4,['yxsre_zhanlv','yxsre_chuxing'],["die_audio"]],
+                            yxsre_yangguang:['male','shen',4,['yxsre_weihuan'],["die_audio"]],
+                            yxsre_luban:['male','shen',3,['yxsre_guifu','yxsre_shengong'],["die_audio"]],
+                            yxsre_sunwu:['male','shen',3,['yxsre_bingsheng','yxsre_taolue'],["die_audio"]],
                             yxsre_huamulan:['unknown','shen',3,['yxsre_mili','yxsre_pushuo','yxsre_cexun'],["die_audio"]],
-                            yxsre_lishishi:['female','song',3,['yxsre_manwu','yxsre_hongzhuang'],[]],
-                            yxsre_baiqi:['male','daqin',4,['yxsre_rentu'],[]],
-                            yxsre_zhaoyong:['male','zhou',4,['yxsre_hufu','yxsre_hanbei'],[]],
-                            yxsre_zhuyuanzhang:['male','shen',4,['yxsre_qiangyun'],[]],
-                            yxsre_zuti:['male','qun',4,['yxsre_qiwu','yxsre_zhitui'],[]],
-                            yxsre_lishimin:['male','tang',4,['yxsre_kongju','yxsre_zunzi'],[]],
-                            yxsre_direnjie:['male','tang',3,['yxsre_shentan','kanpo'],[]],	
-                            yxsre_goujian:['male','zhou',3,['keji','yxsre_tuqiang'],[]],
-                            yxsre_zhangsanfeng:['male','shen',3,['yxsre_wudang','yxsre_taiji'],[]],
-                            yxsre_yuefei:['male','song',4,['yxsre_wumu'],[]],
-                            yxsre_aijiyanhou:['female','western',3,['yxsre_seyou','yxsre_sheshi'],[]],
-                            yxsre_yingzheng:['male','daqin',4,['yxsre_batu','yxsre_yuyu'],['zhu']],
-                            yxsre_lvzhi:['female','han',3,['yxsre_zhensha','xumou'],[]],
-                            yxsre_xiangyu:['male','chu',4,['yxsre_wushuang_modi','yxsre_bawang'],[]],
-                            yxsre_yuji:['female','chu',3,['yxsre_chuyao','yxsre_bieji'],[]],
-                            yxsre_diaochan:['female','han',3,['yxs_zhunwu','biyue'],[]],
-                            yxsre_mingchenghuanghou:['female','western',3,['yxsre_tiewan','yxsre_juecha'],[]],
+                            yxsre_lishishi:['female','song',3,['yxsre_manwu','yxsre_hongzhuang'],["die_audio"]],
+                            yxsre_baiqi:['male','daqin',4,['yxsre_rentu'],["die_audio"]],
+                            yxsre_zhaoyong:['male','zhou',4,['yxsre_hufu','yxsre_hanbei'],["die_audio"]],
+                            yxsre_zhuyuanzhang:['male','shen',4,['yxsre_qiangyun'],["die_audio"]],
+                            yxsre_zuti:['male','qun',4,['yxsre_qiwu','yxsre_zhitui'],["die_audio"]],
+                            yxsre_lishimin:['male','tang',4,['yxsre_kongju','yxsre_zunzi'],["die_audio"]],
+                            yxsre_direnjie:['male','tang',3,['yxsre_shentan','kanpo'],["die_audio"]],              //inherit kanpo
+                            yxsre_goujian:['male','zhou',3,['yxsre_keji','yxsre_tuqiang'],["die_audio"]],
+                            yxsre_zhangsanfeng:['male','shen',3,['yxsre_wudang','yxsre_taiji'],["die_audio"]],
+                            yxsre_yuefei:['male','song',4,['yxsre_wumu'],["die_audio"]],
+                            yxsre_aijiyanhou:['female','western',3,['yxsre_seyou','yxsre_sheshi'],["die_audio"]],
+                            yxsre_yingzheng:['male','daqin',4,['yxsre_batu','yxsre_yuyu'],['zhu',"die_audio"]],
+                            yxsre_lvzhi:['female','han',3,['yxsre_zhensha','yxsre_xumou'],["die_audio"]],
+                            yxsre_xiangyu:['male','chu',4,['yxsre_wushuang','yxsre_bawang'],["die_audio"]],
+                            yxsre_yuji:['female','chu',3,['yxsre_chuyao','yxsre_bieji'],["die_audio"]],
+                            yxsre_diaochan:['female','han',3,['yxsre_zhunwu','yxsre_biyue'],["die_audio"]],
+                            yxsre_mingchenghuanghou:['female','western',3,['yxsre_tiewan','yxsre_juecha'],["die_audio"]],
                             //xinyu
                             xy_yanguoming:['male','xin',4,['xy_qinkuang'],[]],
                             xy_yangrundi:['male','xin',4,['xy_jihong','xy_rongyang','xy_polv'],[]],
@@ -987,12 +987,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_taolue:{
-                                taolue:{
-                                    mod:{
-                                        maxHandcard:function(player,num){
-                                            return 13;
-                                        }
-                                    },
+                                mod:{
+                                    maxHandcard:function(player,num){
+                                        return 13;
+                                    }
                                 },
                             },
 
@@ -2824,7 +2822,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                                     return 8-get.value(card);
                                                 }
                                                 if(player.countCards('h')-player.hp-ui.selected.cards.length>0){
-                                                    return 8-get.value(card);
+                                                    return 6-get.value(card);
                                                 }
                                                 return 4-get.value(card);
                                             });
@@ -2907,12 +2905,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 filter:function(event,player){
                                     return event.player.hp<=0&&(player.countCards('h','jiu')>0||player.countCards('he',{color:'black'})>=2)&&player!=event.player;
                                 },
-                                direct:true,
                                 check:function(event,player){
                                     return event.player.hp>=-1;
                                 },
                                 content:function(){
                                     'step 0'
+                                    trigger.audioed=true;
                                     var goon=(get.attitude(player,trigger.player)<0);
                                     event.numx=1-trigger.player.hp;
                                     var next=player.chooseToDiscard('鸠杀：是否弃置一张【酒】或两张黑色手牌令'+get.translation(trigger.player)+'回复体力至1，然后受到'+get.cnNumber(event.numx)+'点伤害？','he');
@@ -3470,7 +3468,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                              * 3，你获得“离魂”直到此阶段结束
                              */
                             yxsre_zhunwu:{
-                                audio: "ext:英雄杀RE/audio:2",
+                                audio:"ext:英雄杀RE/audio:2",
                                 trigger:{player:'phaseUseBegin'},
                                 filter:function(event,player){
                                     return player.countCards('h')>0;
@@ -3582,7 +3580,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_pushuo_info:'转换技。游戏开始时，你随机获得一个性别。阴：准备阶段开始前/结束阶段结束后，你可以弃置一张装备牌，回复1点体力，将性别变为女性；阳：当你造成伤害后，你选择一个“迷离”选择的武将牌上的技能改为永久获得，然后将性别变为男性。',
                             yxsre_cexun_append:'<span style="font-family: yuanli">雄兔脚扑朔，雌兔眼迷离；双兔傍地走，安能辨我是雄雌？</span>',
                             yxsre_mili:'迷离',
-                            yxsre_mili_info:'锁定技，游戏开始时/你的准备阶段开始前/结束阶段结束后，你从未加入游戏的武将牌中获得等于游戏人数两倍张数（至少4张）的已经随机选择的性别的武将牌，然后你选择其中两个技能获得，直到你下次发动“迷离”（若你的性别与这些武将的不同，则改为选择一个技能，然后若你的性别为：男性，你获得“枭姬”和一张装备牌；女性，你获得“进讨”和一张【杀】），最后你随机选择一个性别。',
+                            yxsre_mili_info:'锁定技，游戏开始时/你的准备阶段开始前/结束阶段结束后，你从未加入游戏的武将牌中获得等于游戏人数张数（至少4张）的与你记录性别相同性别的武将牌，然后你选择其中两个技能获得，直到你下次发动“迷离”（若你的性别与这些武将的不同，则改为选择一个技能，然后若你的性别为：男性，你获得“枭姬”和一张装备牌；女性，你获得“进讨”和一张【杀】），最后你随机重新记录一个性别。',
                             yxsre_hongzhuang:'红妆',
                             yxsre_hongzhuang_info:'转换技。出牌阶段限一次，阴：你可以弃置至少一张黑色牌，然后获得等量的红色牌；阳：你可以弃置至少一张红色牌，然后获得等量的黑色牌。',
                             yxsre_manwu:'曼舞',
@@ -3712,6 +3710,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             "yxsre_yingzheng":"始皇帝",
 
                             //xinyu
+                            "xy_yanguoming":'君已陌路',
                             "xy_yangrundi":'一代の天骄',
                             "xy_qiusidan":'兰质慧心',
                             "xy_linzhen":'书香门第',
