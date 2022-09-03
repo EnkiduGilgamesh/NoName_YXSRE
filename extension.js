@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 2/09/2022 11:22:49
+ * Last Modified: 3/09/2022 07:03:22
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -96,10 +96,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         characterSort:{
                             yxsre: {
                                 yxsre_chunqiu:["yxsre_yingzheng","yxsre_goujian","yxsre_zhaoyong","yxsre_baiqi",'yxsre_sunwu','yxsre_luban','yxsre_chensheng'],
-                                yxsre_dahan:["yxsre_lvzhi","yxsre_xiangyu","yxsre_yuji","yxsre_diaochan","yxsre_chensheng"],
+                                yxsre_dahan:["yxsre_lvzhi","yxsre_xiangyu","yxsre_yuji","yxsre_diaochan","yxsre_chensheng","yxsre_liubang"],
                                 yxsre_nanbei:["yxsre_zuti","yxsre_huamulan"],
                                 yxsre_datang:["yxsre_direnjie","yxsre_lishimin","yxsre_yangguang"],
-                                yxsre_liangsong:["yxsre_yuefei","yxsre_lishishi"],
+                                yxsre_liangsong:["yxsre_yuefei","yxsre_lishishi","yxsre_yangyanzhao"],
                                 yxsre_mingqing:["yxsre_zhuyuanzhang","yxsre_zhangsanfeng"],
 
                                 yxsre_shijie:["yxsre_mingchenghuanghou","yxsre_aijiyanhou"],
@@ -110,6 +110,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         },
 
                         character:{
+                            yxsre_liubang:['male','han',4,["yxsre_yuren"],["die_audio"]],
+                            yxsre_yangyanzhao:['male','song',4,["yxsre_kaiyang"],["die_audio"]],
                             yxsre_chensheng:['male','qun',4,['yxsre_zhanlv','yxsre_chuxing'],["die_audio"]],
                             yxsre_yangguang:['male','shen',4,['yxsre_weihuan'],["die_audio"]],
                             yxsre_luban:['male','shen',3,['yxsre_guifu','yxsre_shengong'],["die_audio"]],
@@ -143,6 +145,126 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         },
 
                         skill:{
+                            yxsre_yuren:{
+                                audio:"ext:英雄杀RE/audio:2",
+                                enable:'phaseUse',
+                                filter:function(event,player){
+                                    return game.countPlayer(function(current){
+                                        return current!=player&&current.countCards('he')&&(!player.storage.yxsre_yuren||!player.storage.yxsre_yuren.contains(current));
+                                    })&&!player.hasSkill('yxsre_yuren2');
+                                },
+                                filterTarget:function(card,player,target){
+                                    return target.countCards('he')&&target!=player&&(!player.storage.yxsre_yuren||!player.storage.yxsre_yuren.contains(target));
+                                },
+                                content:function(){
+                                    'step 0'
+                                    if(!player.storage.yxsre_yuren) player.storage.yxsre_yuren=[];
+                                    player.storage.yxsre_yuren.push(target);
+                                    player.discardPlayerCard(target,'he',true);
+                                    'step 1'
+                                    if(get.type(result.links[0],'trick')=='equip') player.loseHp();
+                                    if(get.type(result.links[0],'trick')=='trick') player.gain(result.links[0],'gain2');
+                                    game.log(get.color(result.links[0]));
+                                    if(get.color(result.links[0])=='red') event.goto(2);
+                                    else event.finish();
+                                    'step 2'
+                                    player.chooseToDiscard('he','弃置一张红色牌，否则“驭人”无效直到回合结束',function(card){
+                                        return get.color(card)=='red';
+                                    }).set('ai',function(card){
+                                        return 6-get.value(card);
+                                    });
+                                    'step 3'
+                                    if(!result.bool){
+                                        player.addTempSkill('yxsre_yuren2');
+                                    }
+                                },
+                                onremove:["yxsre_yuren"],
+                                ai:{
+                                    order:8,
+                                    expose:0.3,
+                                    threaten:1.5,
+                                    result:{
+                                        target:-1,
+                                        player:0.2,
+                                    }
+                                },
+                                group:'yxsre_yuren_draw',
+                                subSkill:{
+                                    draw:{
+                                        trigger:{
+                                            player:'phaseEnd',
+                                        },
+                                        direct:true,
+                                        filter:function(event,player){
+                                            return player.storage.yxsre_yuren&&player.storage.yxsre_yuren.length>=3;
+                                        },
+                                        content:function(){
+                                            player.logSkill('yxsre_yuren');
+                                            player.chooseDrawRecover(2,true,function(event,player){
+                                                if(player.hp<=1&&player.isDamaged()) return 'recover_hp';
+                                                return 'draw_card';
+                                            });
+                                        }
+                                    }
+                                }
+                            },
+
+                            yxsre_yuren2:{},
+
+                            yxsre_kaiyang:{
+                                audio:"ext:英雄杀RE/audio:2",
+                                trigger:{
+                                    global:"useCardAfter",
+                                },
+                                mark:true,
+                                direct:true,
+                                init:function(player,skill){
+                                    player.storage.damageCardNum=0;
+                                },
+                                intro:{
+                                    content:function(event,player){
+                                        return '已经使用了'+get.cnNumber(player.storage.damageCardNum)+'张伤害牌';
+                                    }
+                                },
+                                filter:function(event,player){
+                                    return player.storage.damageCardNum>=6;
+                                },
+                                content:function(){
+                                    'step 0'
+                                    player.storage.damageCardNum=0;
+                                    player.chooseTarget('选择一名角色对其造成1点伤害',true).set('ai',function(target){
+                                        return get.damageEffect(target,player,player);
+                                    });
+                                    'step 1'
+                                    if(result.bool){
+                                        player.logSkill('yxsre_kaiyang',result.targets[0]);
+                                        result.targets[0].damage();
+                                    }
+                                    else event.finish();
+                                },
+                                ai:{
+                                    expose:1,
+                                    threaten:2,
+                                },
+                                group:'yxsre_kaiyang_add',
+                            },
+
+                            yxsre_kaiyang_add:{
+                                log:false,
+                                trigger:{
+                                    global:"useCardAfter",
+                                },
+                                filter:function(event,player){
+                                    return get.tag(event.card,'damage');
+                                },
+                                forced:true,
+                                content:function(){
+                                    player.storage.damageCardNum++;
+                                },
+                                sub:true,
+                            },
+
+
                             xy_qinkuang:{
                                 trigger:{
                                     player:"useCard2",
@@ -2174,18 +2296,34 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             },
 
                             yxsre_zunzi:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 mod:{
                                     maxHandcard:function(player,num){
                                         if(player.hp<player.maxHp) return num+player.maxHp-player.hp;
                                     },
+                                },
+                                group:'yxsre_zunzi_discard',
+                                subSkill:{
+                                    discard:{
+                                        audio:"yxsre_kongju",
+                                        trigger:{
+                                            player:'discardEnd',
+                                        },
+                                        direct:true,
+                                        filter:function(event,player){
+                                            return player.countCards('h')>player.hp;
+                                        },
+                                        content:function(){
+                                            player.logSkill("yxsre_zunzi");
+                                            //trigger.audioed=true;
+                                        }
+                                    }
                                 }
                             },
 
                             yxsre_kongju:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 mod:{
-                                    maxHandcard:function(player,num){
-                                        if(player.hp<player.maxHp) return num+player.maxHp-player.hp;
-                                    },
                                     targetEnabled:function(card,player,target,now){
                                         if(target.countCards('h')>target.maxHp){
                                             if(card.name=='lebu') return false;
@@ -2201,6 +2339,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 group:['yxsre_kongju_bigger','yxsre_kongju_smaller'],
                                 subSkill:{
                                     bigger:{
+                                        audio:"yxsre_kongju",
                                         enable:"phaseUse",
                                         usable:1,
                                         unique:true,
@@ -2235,6 +2374,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         },
                                     },
                                     smaller:{
+                                        audio:"yxsre_kongju",
                                         trigger:{
                                             player:"phaseDrawBegin2",
                                         },
@@ -2249,12 +2389,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         ai:{
                                             threaten:1.3,
                                         },
-                                    }
-                                    
+                                    },
                                 }
                             },
 
+                            yxsre_kanpo:{
+                                inherit:'kanpo',
+                                audio:"ext:英雄杀RE/audio:2",
+                            },
+
                             yxsre_shentan:{
+                                audio:"ext:英雄杀RE/audio:2",
                                 enable:'phaseUse',
                                 usable:1,
                                 filterCard:true,
@@ -3517,6 +3662,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_undo:"未分类",
 
                             //Character
+                            yxsre_liubang:'刘邦',
+                            yxsre_yangyanzhao:'杨延昭',
                             yxsre_chensheng:'陈胜',
                             yxsre_yangguang:'杨广',
                             yxsre_luban:'鲁班',
@@ -3551,6 +3698,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_huangyang:'黄阳',
 
                             //Skill
+                            yxsre_yuren:'驭人',
+                            yxsre_yuren_info:'出牌阶段，你可以弃置一名角色一张牌。若你以此法弃置的是：装备牌，你失去1点体力；锦囊牌，你获得之；红色牌，除非你弃置一张红色牌，否则驭人无效直到回合结束。结束阶段，若你此回合曾对不少于3名角色使用过驭人，你可以摸两张牌或回复1点体力。',
+                            yxsre_kaiyang:'开阳',
+                            yxsre_kaiyang_info:'全场每有第6张带有伤害标签的牌结算结束后，你可以对一名角色造成1点伤害。',
                             yxsre_zhanlv:'斩闾',
                             yxsre_zhanlv_info:'摸牌阶段，你可以放弃摸牌，改为依次弃置一名其他角色两张牌，若其中有：【杀】，你对其使用之；武器牌，你获得之，然后可以立即使用之。',
                             yxsre_chuxing:'楚兴',
@@ -3604,6 +3755,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_zunzi_info:"锁定技。你的手牌上限基数为你的体力上限。",
                             yxsre_kongju:'控局',
                             yxsre_kongju_info:'若你的手牌数小于：你的体力上限，防止你的手牌被弃置或被其他角色获得；你的体力值，摸牌阶段，你多摸一张牌；若你的手牌数大于：你的体力上限，你不会成为【乐不思蜀】目标；你的体力值，出牌阶段限一次，你可以重铸一张牌。',
+                            yxsre_kanpo:'看破',
+                            yxsre_kanpo_info:'你可以将黑色手牌当作【无懈可击】使用。',
                             yxsre_shentan:'神探',
 			                yxsre_shentan_info:'出牌阶段限一次，你可以弃置一张牌，获得距离2以内的一名角色的一张手牌，然后可以将其交给另一名角色',
                             yxsre_keji:'克己',
@@ -3704,9 +3857,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         },
 
                         characterTitle: {
+                            "yxsre_liubang":'汉高祖',
+                            "yxsre_yangyanzhao":"北斗六郎",
                             "yxsre_chensheng":"首事鸿鹄",
                             "yxsre_yangguang":"千古之炀",
-                            "yxsre_baiqi":"武安军",
+                            "yxsre_baiqi":"武安君",
                             "yxsre_yingzheng":"始皇帝",
 
                             //xinyu
