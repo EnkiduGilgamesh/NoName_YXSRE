@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 1/09/2022 09:55:48
+ * Last Modified: 4/09/2022 04:29:42
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -129,7 +129,7 @@ window.yxsre_import(function(lib,game,ui,get,ai,_status){
                 'yxsre_huamulan':{
                     '___origin':{
                         'yxsre_mili':1,//恢复皮肤初始状态
-                        'yxsre_pushuo':'extension/英雄杀RE/image/character/yxsre_huamulan_chuanshuozhiren.jpg',
+                        'yxsre_pushuo':'extension/英雄杀RE/skin/standard/yxsre_huamulan/yxsre_huamulan_chuanshuozhiren.jpg',
 
                         //露头例子：'lyzzhenguan':lib.config.ygbLutou==false?['extension/英雄杀RE/image/character/lyz_shen_lvbu2.jpg','extension/阳光包/image/character/lyz_shen_lvbu3.jpg']:['extension/阳光包/image/lutou/lyz_shen_lvbu2.jpg','extension/阳光包/image/lutou/lyz_shen_lvbu3.jpg'], 
                     },

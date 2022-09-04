@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 3/09/2022 07:03:22
+ * Last Modified: 4/09/2022 07:40:46
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -28,9 +28,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
             //平凡武将
             lib.rank.rarity.junk.addArray(['yxsre_yuefei','yxsre_goujian','yxsre_direnjie','yxsre_lishimin','yxsre_zuti','yxsre_zhaoyong','xy_linzhen','xy_yaosongwei','yxsre_chensheng']);
             //精品武将
-            lib.rank.rarity.rare.addArray(["yxsre_yuji","yxsre_diaochan","yxsre_zhangsanfeng","xy_huangyang"]);
+            lib.rank.rarity.rare.addArray(["yxsre_yuji","yxsre_diaochan","yxsre_zhangsanfeng","xy_huangyang","yxsre_yangyanzhao"]);
             //史诗武将
-            lib.rank.rarity.epic.addArray(["yxsre_lvzhi","yxsre_xiangyu",'yxsre_luban']);
+            lib.rank.rarity.epic.addArray(["yxsre_lvzhi","yxsre_xiangyu",'yxsre_luban',"yxsre_liubang"]);
             //传说武将
             lib.rank.rarity.legend.addArray(["yxsre_yingzheng","yxsre_zhuyuanzhang","yxsre_huamulan","yxsre_sunwu","yxsre_yangguang"]);
 
@@ -110,6 +110,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                         },
 
                         character:{
+                            yxsre_baosi:['famale','zhou',3,['yxsre_xihou'],[]],
                             yxsre_liubang:['male','han',4,["yxsre_yuren"],["die_audio"]],
                             yxsre_yangyanzhao:['male','song',4,["yxsre_kaiyang"],["die_audio"]],
                             yxsre_chensheng:['male','qun',4,['yxsre_zhanlv','yxsre_chuxing'],["die_audio"]],
@@ -123,7 +124,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_zhuyuanzhang:['male','shen',4,['yxsre_qiangyun'],["die_audio"]],
                             yxsre_zuti:['male','qun',4,['yxsre_qiwu','yxsre_zhitui'],["die_audio"]],
                             yxsre_lishimin:['male','tang',4,['yxsre_kongju','yxsre_zunzi'],["die_audio"]],
-                            yxsre_direnjie:['male','tang',3,['yxsre_shentan','kanpo'],["die_audio"]],              //inherit kanpo
+                            yxsre_direnjie:['male','tang',3,['yxsre_shentan','yxsre_kanpo'],["die_audio"]],
                             yxsre_goujian:['male','zhou',3,['yxsre_keji','yxsre_tuqiang'],["die_audio"]],
                             yxsre_zhangsanfeng:['male','shen',3,['yxsre_wudang','yxsre_taiji'],["die_audio"]],
                             yxsre_yuefei:['male','song',4,['yxsre_wumu'],["die_audio"]],
@@ -144,7 +145,127 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_huangyang:['male','xin',3,['xy_danmei','xy_qiyuan'],[]],
                         },
 
+                        card:{
+                            yxsre_fenghuolangyan:{
+                                audio:true,
+                                image:"ext:英雄杀RE/image/card/yxsre_fenghuolangyan.png",
+                                fullskin:false,
+                                type:"trick",
+                                enable:true,
+                                derivation:'yxsre_baosi',
+                                selectTarget:1,
+                                onLose:function(){
+                                    card.fix();
+                                    card.remove();
+                                    card.destroyed=true;
+                                    //game.log(card,'被销毁了');
+                                },
+                                filterTarget:function(card,player,target){
+                                    return target!=player;
+                                },
+                                content:function(){
+                                    player.draw();
+                                },
+                                ai:{                    //zhen's ai
+                                    order:5,
+                                    basic:{
+                                        useful:function(card,i){
+                                            if(_status.event.player.hp>1){
+                                                if(i==0) return 4;
+                                                return 1;
+                                            }
+                                            if(i==0) return 7.3;
+                                            return 3;
+                                        },
+                                        value:function(card,player,i){
+                                            if(player.hp>1){
+                                                if(i==0) return 5;
+                                                return 1;
+                                            }
+                                            if(i==0) return 7.3;
+                                            return 3;
+                                        },
+                                    },
+                                    result:{
+                                        target:function(player,target){
+                                            if(target&&target.isPhaseUsing()&&target.hp==1&&!target.countCards("h","tao")) return 0;
+                                            if(target.hasSkill('dz_zhen_skill')) return 0;
+                                            if(target&&target.isDying()) return 2;
+                                            if(target&&!target.isPhaseUsing()) return 0;
+                                            if(lib.config.mode=='stone'&&!player.isMin()){
+                                                if(player.getActCount()+1>=player.actcount) return 0;
+                                            }
+                                            var shas=player.getCards('h','sha');
+                                            if(shas.length>1&&(player.getCardUsable('sha')>1||player.countCards('h','zhuge'))){
+                                                return 0;
+                                            }
+                                            shas.sort(function(a,b){
+                                                return get.order(b)-get.order(a);
+                                            })
+                                            var card;
+                                            if(shas.length){
+                                                for(var i=0;i<shas.length;i++){
+                                                    if(lib.filter.filterCard(shas[i],target)){
+                                                        card=shas[i];break;
+                                                    }
+                                                }
+                                            }
+                                            else if(player.hasSha()&&player.needsToDiscard()){
+                                                if(player.countCards('h','hufu')!=1){
+                                                    card={name:'sha'};
+                                                }
+                                            }
+                                            if(card){
+                                                if(game.hasPlayer(function(current){
+                                                    return (get.attitude(target,current)<0&&
+                                                        target.canUse(card,current,true,true)&&
+                                                        !current.hasSkillTag('filterDamage',null,{
+                                                            player:player,
+                                                            card:card,
+                                                            dz_zhen:true,
+                                                        })&&
+                                                        get.effect(current,card,target)>0);
+                                                })){
+                                                    return 1;
+                                                }
+                                            }
+                                            return 0;
+                                        },
+                                    },
+                                    tag:{
+                                        use:1,
+                                        useSha:1,
+                                        loseCard:1,
+                                    },
+                                }
+                            }
+                        },
+
                         skill:{
+                            yxsre_xihou:{
+                                audio:2,
+                                enable:"phaseUse",
+                                usable:1,
+                                position:"h",
+                                filterCard:function (card){
+                                    return card.name=='sha';
+                                },
+                                content:function(){
+                                    /*if(!lib.inpile.contains('yxsre_fenghuolangyan')) lib.inpile.add('yxsre_fenghuolangyan');
+                                    if(!_status.yxsre_fenghuolangyan_suits) _status.yxsre_fenghuolangyan_suits=lib.suit.slice(0);
+                                    var list=_status.yxsre_fenghuolangyan_suits.randomRemove(2).map(function(i){
+                                        return game.createCard2('yxsre_fenghuolangyan',i,get.rand(1,13));
+                                    });
+                                    if(list.length) player.gain(list,'gain2','log');*/
+                                    if(lib.card["yxsre_fenghuolangyan"]){
+                                        var card=game.createCard("yxsre_fenghuolangyan",lib.card["yxsre_fenghuolangyan"].suit,12);
+                                        player.$gain2(card,false);
+                                    }
+                                    game.delayx();
+                                    player.gain(card,'gain2');
+                                },
+                            },
+
                             yxsre_yuren:{
                                 audio:"ext:英雄杀RE/audio:2",
                                 enable:'phaseUse',
@@ -959,7 +1080,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         _status.event=tmp;
                                         return result>=0;
                                     }
-                                    return true;
+                                    return false;
                                 },
                                 content:function(){
                                     'step 0'
@@ -2777,7 +2898,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                                 content:function(){
                                     'step 0'
-                                    player.choosePlayerCard(player,'he',get.prompt('yxsre_tiewan',trigger.player)).set('ai',function(card){
+                                    player.choosePlayerCard(player,'he',get.prompt('yxsre_tiewan')).set('ai',function(card){
                                         return get.buttonValue(card);
                                     });
                                     'step 1'
@@ -3649,6 +3770,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             //
                             yxsre:'英雄杀RE',
 
+                            //card
+                            yxsre_fenghuolangyan:'烽火狼烟',
+
                             //Classifiction
                             yxsre_chunqiu:"春秋百家",
                             yxsre_dahan:"楚汉争霸",
@@ -3662,6 +3786,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_undo:"未分类",
 
                             //Character
+                            yxsre_baosi:'褒姒',
                             yxsre_liubang:'刘邦',
                             yxsre_yangyanzhao:'杨延昭',
                             yxsre_chensheng:'陈胜',
@@ -3698,8 +3823,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             xy_huangyang:'黄阳',
 
                             //Skill
+                            yxsre_xihou:'戏侯',
                             yxsre_yuren:'驭人',
-                            yxsre_yuren_info:'出牌阶段，你可以弃置一名角色一张牌。若你以此法弃置的是：装备牌，你失去1点体力；锦囊牌，你获得之；红色牌，除非你弃置一张红色牌，否则驭人无效直到回合结束。结束阶段，若你此回合曾对不少于3名角色使用过驭人，你可以摸两张牌或回复1点体力。',
+                            yxsre_yuren_info:'出牌阶段每名角色限一次，你可以弃置一名角色一张牌。若你以此法弃置的是：装备牌，你失去1点体力；锦囊牌，你获得之；红色牌，除非你弃置一张红色牌，否则驭人无效直到回合结束。结束阶段，若你此回合曾对不少于3名角色使用过驭人，你可以摸两张牌或回复1点体力。',
                             yxsre_kaiyang:'开阳',
                             yxsre_kaiyang_info:'全场每有第6张带有伤害标签的牌结算结束后，你可以对一名角色造成1点伤害。',
                             yxsre_zhanlv:'斩闾',
