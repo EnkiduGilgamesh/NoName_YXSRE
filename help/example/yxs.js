@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 31/08/2022 08:06:15
+ * Last Modified: 4/09/2022 11:04:37
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -41,12 +41,12 @@ game.import('character',function(lib,game,ui,get,ai,_status){
 			yxs_lvzhi:['female','qun',3,['zhensha','xumou']],						//DONE:
 			yxs_goujian:['male','qun',3,['keji','tuqiang']],						//DONE:
 			yxs_lishimin:['male','qun',4,['kongju']],								//DONE: 
-			yxs_huamulan:['female','shen',3,['xiaoji','yizhuang']],
+			yxs_huamulan:['female','shen',3,['xiaoji','yizhuang']],					//DONE
 			yxs_luobinhan:['male','western',4,['xiadao','sheshu','lguiyin']],
 			yxs_chengjisihan:['male','western',4,['mashu','qianglue']],
 			yxs_mingchenghuanghou:['female','western',3,['tiewan','yxs_juecha']],	//DONE: 
 			yxs_wangzhaojun:['female','qun',3,['heqin','wluoyan']],
-			yxs_luocheng:['male','qun',4,['hanqiang','biaoqi']],
+			yxs_luocheng:['male','qun',4,['hanqiang','biaoqi']],					
 			yxs_direnjie:['male','qun',3,['shentan','kanpo']],						//DONE
 			yxs_sunwu:['male','shen',3,['bingsheng','taolue']],						//DONE
 			yxs_chengyaojin:['male','qun',4,['sanbanfu']],
@@ -58,8 +58,8 @@ game.import('character',function(lib,game,ui,get,ai,_status){
 			yxs_guiguzi:['male','shen',3,['baihe','yinyang','xiushen']],
 			yxs_xiaoqiao:['female','qun',3,['chujia','zhijie']],
 			yxs_luzhishen:['male','qun',4,['dili','kuangchan']],
-			yxs_zhaoyong:['male','qun',4,['zyhufu','hanbei']],
-			yxs_yangguang:['male','qun',3,['shiqin','yaoyi']],
+			yxs_zhaoyong:['male','qun',4,['zyhufu','hanbei']],						//DONE
+			yxs_yangguang:['male','qun',3,['shiqin','yaoyi']],						//DONE
 			yxs_tangbohu:['male','qun',3,['luobi','fengliu']],
 			yxs_zhangsanfeng:['male','shen',3,['yxs_wudang','yxs_taiji']],			//DONE: 
 			yxs_nandinggeer:['female','western',3,['huli','xianqu','yixin']],

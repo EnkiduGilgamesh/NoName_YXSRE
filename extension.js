@@ -5,7 +5,7 @@
  * Author: Wenren Muyan
  * Comments: 
  * --------------------------------------------------------------------------------
- * Last Modified: 4/09/2022 07:40:46
+ * Last Modified: 5/09/2022 02:48:13
  * Modified By: Wenren Muyan
  * --------------------------------------------------------------------------------
  * Copyright (c) 2022 - future Wenren Muyan
@@ -397,12 +397,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                                 content:function(){
                                     'step 0'
-                                    game.log(get.translation(trigger.card).split(/[·【]/)[0].length);
-                                    if(get.translation(trigger.card).split(/[·【]/)[0].length>player.hp){
+                                    event.num=get.translation(trigger.card).split(/[·【]/)[0].length;
+                                    if(trigger.card.nature) event.num--;
+                                    if(event.num>player.hp){
                                         player.draw();
                                         //player.logSkill('xy_qinkuang');
                                     }
-                                    if(get.translation(trigger.card).split(/[·【]/)[0].length==player.hp){
+                                    if(event.num==player.hp){
                                         var goon=false;
                                         var info=get.info(trigger.card);
                                         if((get.type(trigger.card)=='basic'||get.type(trigger.card)=='trick')&&trigger.targets&&!info.multitarget){
@@ -1394,7 +1395,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 trigger:{
                                     source:["damageEnd"],
                                 },
-                                prompt:'摸一张牌，然后将性别转变为男性',
+                                prompt:'永久获得一个“迷离”选择的技能，然后将性别转变为男性',
                                 filter:function(event,player){
                                     return player.storage.yxsre_pushuo;
                                 },
@@ -1412,9 +1413,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         if(list.contains('jintao')) list.remove('jintao');
                                         if(list.contains('xiaoji')) list.remove('xiaoji');
                                         player.chooseControl(list);
-                                        //player.chooseControl(['请选择一个技能永久获得',list]).set('ai',function(button){
-                                        //    return Math.random();
-                                        //});
                                     }
                                     else event.finish();
                                     'step 1'
@@ -1468,7 +1466,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 audio:"ext:英雄杀RE/audio:2",
                                 trigger:{
                                     global:"gameStart",
-                                    player:["phaseBegin","phaseEng"],
+                                    player:["phaseBegin","phaseEnd"],
                                 },
                                 priority:10,
                                 forced:true,
@@ -1672,6 +1670,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                             }
                                         }
                                         player.gain(card,'gain2');
+                                        if(card) player.chooseUseTarget(card);
                                     }
                                 },
                             },
@@ -1957,6 +1956,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     player.discardPlayerCard(event.targetx,'he',true);
                                 },
                                 subSkill:{
+                                },
+                                ai:{
+                                    expose:0.3,
                                 }
                             },
 
@@ -2634,7 +2636,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                     effect:{
                                         target:function(card,player,target){
                                             if(player.hasSkillTag('jueqing',false,target)) return [1,-1];
-                                            if(!target.countCards('h')) return -1.5;
+                                            if(!target.countCards('h')) return [1,-1.5,1,-1.5];
                                             return 0.8;
                                         },
                                     },
@@ -2662,7 +2664,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
 
                             yxsre_wumu:{
                                 shaRelated:true,
-                                //audio:"ext:英雄杀RE/audio:3",
+                                audio:"ext:英雄杀RE/audio:3",
                                 trigger:{player:['useCard']},
                                 filter:function(event,player){
                                     return event.card.name=='sha'&&get.color(event.card)=='red';
@@ -2707,7 +2709,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         },
                                     },
                                     black:{
-                                        //audio:'yxsre_wumu',
+                                        audio:'yxsre_wumu',
                                         trigger:{
                                             source:"damageBegin",
                                         },
@@ -2721,7 +2723,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         sub:true,
                                     },
                                     red:{
-                                        //audio:'yxsre_wumu',
+                                        audio:'yxsre_wumu',
                                         trigger:{
                                             player:"shaBegin",
                                         },
@@ -3176,7 +3178,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                 },
                                 content:function(){
                                     'step 0'
-                                    trigger.audioed=true;
                                     var goon=(get.attitude(player,trigger.player)<0);
                                     event.numx=1-trigger.player.hp;
                                     var next=player.chooseToDiscard('鸠杀：是否弃置一张【酒】或两张黑色手牌令'+get.translation(trigger.player)+'回复体力至1，然后受到'+get.cnNumber(event.numx)+'点伤害？','he');
@@ -3210,6 +3211,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                                         //if(trigger.getParent().source) trigger.getParent().source=player;
                                         //trigger.player.die();
                                         // TODO: 请测试，卖血将应该可以插入发动技能   A：对
+                                        trigger.audioed=true;
                                         trigger.player.recover(event.numx);
                                         trigger.player.damage(event.numx+1);
                                     }
@@ -3827,7 +3829,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_yuren:'驭人',
                             yxsre_yuren_info:'出牌阶段每名角色限一次，你可以弃置一名角色一张牌。若你以此法弃置的是：装备牌，你失去1点体力；锦囊牌，你获得之；红色牌，除非你弃置一张红色牌，否则驭人无效直到回合结束。结束阶段，若你此回合曾对不少于3名角色使用过驭人，你可以摸两张牌或回复1点体力。',
                             yxsre_kaiyang:'开阳',
-                            yxsre_kaiyang_info:'全场每有第6张带有伤害标签的牌结算结束后，你可以对一名角色造成1点伤害。',
+                            yxsre_kaiyang_info:'全场每有6张带有伤害标签的牌结算结束后，你可以对一名角色造成1点伤害。',
                             yxsre_zhanlv:'斩闾',
                             yxsre_zhanlv_info:'摸牌阶段，你可以放弃摸牌，改为依次弃置一名其他角色两张牌，若其中有：【杀】，你对其使用之；武器牌，你获得之，然后可以立即使用之。',
                             yxsre_chuxing:'楚兴',
@@ -3857,7 +3859,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status){
                             yxsre_pushuo_info:'转换技。游戏开始时，你随机获得一个性别。阴：准备阶段开始前/结束阶段结束后，你可以弃置一张装备牌，回复1点体力，将性别变为女性；阳：当你造成伤害后，你选择一个“迷离”选择的武将牌上的技能改为永久获得，然后将性别变为男性。',
                             yxsre_cexun_append:'<span style="font-family: yuanli">雄兔脚扑朔，雌兔眼迷离；双兔傍地走，安能辨我是雄雌？</span>',
                             yxsre_mili:'迷离',
-                            yxsre_mili_info:'锁定技，游戏开始时/你的准备阶段开始前/结束阶段结束后，你从未加入游戏的武将牌中获得等于游戏人数张数（至少4张）的与你记录性别相同性别的武将牌，然后你选择其中两个技能获得，直到你下次发动“迷离”（若你的性别与这些武将的不同，则改为选择一个技能，然后若你的性别为：男性，你获得“枭姬”和一张装备牌；女性，你获得“进讨”和一张【杀】），最后你随机重新记录一个性别。',
+                            yxsre_mili_info:'锁定技，游戏开始时/你的准备阶段开始前/结束阶段结束后，你从未加入游戏的武将牌中获得等于游戏人数张数（至少4张）的与你记录性别相同性别的武将牌，然后你选择其中两个技能获得，直到你下次发动“迷离”（若你的性别与这些武将的不同，则改为选择一个技能，然后若你的性别为：男性，你获得“枭姬”和一张装备牌；女性，你获得“进讨”和一张【杀】，且你可以立即使用以此法获得的牌），最后你随机重新记录一个性别。',
                             yxsre_hongzhuang:'红妆',
                             yxsre_hongzhuang_info:'转换技。出牌阶段限一次，阴：你可以弃置至少一张黑色牌，然后获得等量的红色牌；阳：你可以弃置至少一张红色牌，然后获得等量的黑色牌。',
                             yxsre_manwu:'曼舞',
